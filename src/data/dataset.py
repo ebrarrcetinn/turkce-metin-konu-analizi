@@ -1,9 +1,10 @@
 """
 Dosya   : src/data/dataset.py
 Konu    : Veri Seti Hazırlama
-Açıklama: Ham Tabu kartlarını okur, taksonomiye eşler, tekrar ve çelişkileri temizler;
-          eğitim, doğrulama, test, görülmemiş konu (OOD) ve harici değerlendirme setlerini
-          oluşturup sızıntı kontrolüyle birlikte data/processed klasörüne yazar.
+Açıklama: Bu dosyada amacım ham Tabu kartlarını okumak, taksonomiye eşlemek, tekrar ve
+          çelişkileri temizlemek; eğitim, doğrulama, test, görülmemiş konu (OOD) ve harici
+          değerlendirme setlerini oluşturup sızıntı kontrolüyle birlikte data/processed
+          klasörüne yazmak.
 Yazar   : Ebrar Cemre Çetin
 Tarih   : 24.09.2026
 """
@@ -35,32 +36,33 @@ from src.preprocessing.text import normalize
 
 logger = logging.getLogger(__name__)
 
-EXPECTED_TABOO_CARDS = 37_278  # veri setinin sabitlenen sürümündeki kart sayısı
-# Tabu JSON dosyalarındaki her kartta bulunması gereken alanlar. Diğer alanlar (id,
-# yasakli_kelimeler, zorluk) kullanılmaz; eğitim metni kavram + açıklamadır.
+EXPECTED_TABOO_CARDS = 37_278  # veri setinin sabitlediğim sürümündeki kart sayısı
+# Tabu JSON dosyalarındaki her kartta bulunmasını beklediğim alanlar. Diğer alanları (id,
+# yasakli_kelimeler, zorluk) kullanmıyorum; eğitim metnini kavram + açıklamadan oluşturuyorum.
 REQUIRED_CARD_KEYS = ("kategori", "kelime", "aciklama")
-SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])\s+")  # nokta/soru/ünlem sonrası boşluktan böl
-# Harici setteki cümleler, eğitim verisindeki kart uzunluğuna yakın tutulur.
+SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])\s+")  # nokta/soru/ünlem sonrası boşluktan bölüyorum
+# Harici setteki cümleleri, eğitim verisindeki kart uzunluğuna yakın tutuyorum.
 EXTERNAL_MIN_WORDS, EXTERNAL_MAX_WORDS = 6, 40
 EXTERNAL_SAMPLE_PER_SOURCE = 400
-NEAR_DUPLICATE_COSINE = 0.9  # bu benzerliğin üstündeki iki metin "neredeyse aynı" sayılır
+NEAR_DUPLICATE_COSINE = 0.9  # bu benzerliğin üstündeki iki metni "neredeyse aynı" sayıyorum
 
 # Bir veri satırı. Anahtarlar: text, general, subtopic, category, term, group, source
 Record = dict[str, str | None]
 
 
 class DatasetError(RuntimeError):
-    """Veri bulunamadı veya beklenen biçimde değil."""
+    """Veriyi bulamadığımda veya veri beklediğim biçimde olmadığında bu hatayı veriyorum."""
 
 
 def term_group(term: str) -> str:
-    """Bölmede kullanılan grup anahtarı. Her sözcüğün ilk 6 harfi alınır; böylece
-    "fotosentez" ile "fotosentezin" aynı gruba düşer ve farklı bölmelere sızmaz."""
+    """Bölmede kullandığım grup anahtarı. Her sözcüğün ilk 6 harfini alıyorum; böylece
+    "fotosentez" ile "fotosentezin" aynı gruba düşüyor ve farklı bölmelere sızmıyor."""
     return " ".join(token[:6] for token in normalize(term).split())
 
 
 class DatasetBuilder:
-    """Ham kaynaklardan eğitim, doğrulama, test, OOD ve harici değerlendirme setlerini üretir."""
+    """Amacım ham kaynaklardan eğitim, doğrulama, test, OOD ve harici değerlendirme
+    setlerini üretmek."""
 
     def __init__(self, raw_dir: Path = RAW_DIR, out_dir: Path = PROCESSED_DIR,
                  seed: int = RANDOM_SEED):
@@ -70,7 +72,8 @@ class DatasetBuilder:
         self.stats: dict = {}
 
     def load_cards(self) -> list[Record]:
-        """data/raw/taboo/data/*.json dosyalarındaki tüm kartları okur ve alanlarını denetler."""
+        """data/raw/taboo/data/*.json dosyalarındaki tüm kartları okuyor ve alanlarını
+        denetliyorum."""
         data_dir = self.raw_dir / "taboo" / "data"
         paths = sorted(data_dir.glob("*.json"))
         if not paths:
@@ -94,27 +97,27 @@ class DatasetBuilder:
         return cards
 
     def clean(self, cards: list[Record]) -> list[Record]:
-        """Kartları taksonomiye eşler, tekrarları ve çelişkili etiketleri atar."""
+        """Kartları taksonomiye eşliyor, tekrarları ve çelişkili etiketleri atıyorum."""
         stats = {"raw_rows": len(cards)}
         records: list[Record] = []
         excluded = 0
         for card in cards:
-            if not card["definition"]:  # açıklaması boş kart öğretici değildir
+            if not card["definition"]:  # açıklaması boş kart öğretici değil, atlıyorum
                 continue
             mapped = map_card(str(card["category"]), str(card["term"]))
             if mapped is None:
                 excluded += 1
                 continue
-            # Eğitim metni: kavram + açıklaması. Örnek: "kübit kuantum bilgisayarların temel
-            # bilgi birimi olan, 0 ve 1 durumlarını aynı anda taşıyabilen ..."
+            # Eğitim metnini kavram + açıklamasından oluşturuyorum. Örnek: "kübit kuantum
+            # bilgisayarların temel bilgi birimi olan, 0 ve 1 durumlarını aynı anda taşıyabilen ..."
             text = f"{card['term']} {card['definition']}"
             records.append({"text": text, "general": mapped[0], "subtopic": mapped[1],
                             "category": card["category"], "term": card["term"],
                             "group": term_group(str(card["term"])), "source": "taboo"})
         stats["excluded_ambiguous_rows"] = excluded
 
-        # Aynı metin aynı etiketle tekrar ediyorsa bir kez tutulur; farklı etiketle
-        # tekrar ediyorsa etiket çelişkisidir ve hepsi atılır.
+        # Aynı metin aynı etiketle tekrar ediyorsa bir kez tutuyorum; farklı etiketle
+        # tekrar ediyorsa bunu etiket çelişkisi sayıp hepsini atıyorum.
         labels_by_text: dict[str, set] = {}
         for record in records:
             labels_by_text.setdefault(normalize(str(record["text"])), set()).add(
@@ -133,32 +136,34 @@ class DatasetBuilder:
         return unique
 
     def split(self, records: list[Record]) -> dict[str, list[Record]]:
-        """Görülmemiş OOD kategorilerini ayırır, kalanı terim gruplu train/val/test'e böler."""
+        """Görülmemiş OOD kategorilerini ayırıyor, kalanı terim gruplu train/val/test'e
+        bölüyorum."""
         rng = random.Random(self.seed)
-        # "Diğer" kategorilerinin bir kısmı rastgele seçilip eğitimden tamamen çıkarılır.
-        # Model bu konuları (ör. balıkçılık, kaligrafi) hiç görmez; testte bunlara konu
-        # iddia etmemesi beklenir.
+        # "Diğer" kategorilerinin bir kısmını rastgele seçip eğitimden tamamen çıkarıyorum.
+        # Model bu konuları (ör. balıkçılık, kaligrafi) hiç görmüyor; testte bunlara konu
+        # iddia etmemesini bekliyorum.
         other_categories = sorted({str(r["category"]) for r in records
                                    if r["general"] == OTHER_LABEL})
         unseen: set[str] = set(rng.sample(other_categories,
                                           round(len(other_categories) * UNSEEN_OOD_FRACTION)))
         seen = [r for r in records if r["category"] not in unseen]
         seen_groups = {r["group"] for r in seen}
-        # Eğitimde bulunabilecek bir terimle aynı gruptaki OOD kartları atılır (sızıntı).
+        # Eğitimde bulunabilecek bir terimle aynı gruptaki OOD kartlarını atıyorum (sızıntı).
         ood = [r for r in records if r["category"] in unseen and r["group"] not in seen_groups]
 
         def holdout(rows: list[Record], fraction: float, seed: int):
-            # Tabakalama kategori üzerinden yapılır: her kategoriden orantılı örnek ayrılır.
+            # Tabakalamayı kategori üzerinden yapıyorum: her kategoriden orantılı örnek ayırıyorum.
             kept, held = grouped_stratified_split([str(r["category"]) for r in rows],
                                                   [str(r["group"]) for r in rows],
                                                   fraction, seed)
             return [rows[i] for i in kept], [rows[i] for i in held]
 
-        # Önce %15 test ayrılır, sonra kalan %85'ten tüm verinin %15'i kadar doğrulama.
+        # Önce %15 test ayırıyorum, sonra kalan %85'ten tüm verinin %15'i kadar doğrulama.
         train_val, test = holdout(seen, TEST_SIZE, self.seed)
         train, val = holdout(train_val, VAL_SIZE / (1 - TEST_SIZE), self.seed + 1)
-        # Görülmemiş kategorilerin yarısı güven eşiğini seçmek için (ood_val), diğer yarısı
-        # yalnızca son değerlendirme için (ood_unseen) ayrılır; ikisi ortak kategori içermez.
+        # Görülmemiş kategorilerin yarısını güven eşiğini seçmek için (ood_val), diğer yarısını
+        # yalnızca son değerlendirme için (ood_unseen) ayırıyorum; ikisi ortak kategori
+        # içermiyor.
         ood_val_categories = set(rng.sample(sorted(unseen), len(unseen) // 2))
         ood_val = [r for r in ood if r["category"] in ood_val_categories]
         ood_test = [r for r in ood if r["category"] not in ood_val_categories]
@@ -169,11 +174,12 @@ class DatasetBuilder:
                 "ood_unseen": ood_test}
 
     def external(self) -> list[Record]:
-        """İnsan yazımı, farklı üsluptaki iki kaynaktan tek konulu cümle örnekleri.
+        """Burada amacım insan yazımı, farklı üsluptaki iki kaynaktan tek konulu cümle
+        örnekleri toplamak.
 
         Tabu kartları kısa tanımlardır. Modelin ders kitabı / ansiklopedi üslubundaki
         metinlerde nasıl davrandığını görmek için biyoloji ve Osmanlı tarihi paragraflarından
-        cümleler alınır. Bu set eğitimde hiç kullanılmaz.
+        cümleler alıyorum. Bu seti eğitimde hiç kullanmıyorum.
         """
         specs = [("bquad", sorted((self.raw_dir / "bquad").glob("*.json")), "Biyoloji", None),
                  ("ottoman", sorted((self.raw_dir / "ottoman").rglob("*.json")), "Tarih",
@@ -184,12 +190,13 @@ class DatasetBuilder:
             if not paths:
                 logger.warning("Harici kaynak bulunamadı: %s", source)
                 continue
-            # İki kaynak da SQuAD biçimindedir: data -> paragraphs -> context (paragraf metni).
+            # İki kaynağı da SQuAD biçiminde okuyorum:
+            # data -> paragraphs -> context (paragraf metni).
             contexts = [paragraph["context"] for path in paths
                         for document in json.loads(path.read_text(encoding="utf-8"))["data"]
                         for paragraph in document["paragraphs"]]
-            # Paragraflar cümlelere bölünür; tekrarlar set ile atılır, sıralama tekrar
-            # üretilebilirlik içindir.
+            # Paragrafları cümlelere bölüyorum; tekrarları set ile atıyorum, sıralamayı tekrar
+            # üretilebilirlik için yapıyorum.
             sentences = sorted({s.strip() for c in contexts
                                 for s in SENTENCE_SPLIT_RE.split(c.replace("\n", " "))
                                 if EXTERNAL_MIN_WORDS <= len(s.split()) <= EXTERNAL_MAX_WORDS})
@@ -201,13 +208,14 @@ class DatasetBuilder:
 
     @staticmethod
     def taxonomy_seeds() -> list[Record]:
-        """Konu ve alt konu adlarının kendisinden oluşan kısa eğitim örnekleri.
+        """Burada amacım konu ve alt konu adlarının kendisinden oluşan kısa eğitim örnekleri
+        üretmek.
 
         Tabu kartlarında kartın kendi kategorisinin adı (ör. "biyoloji") yasaklı sözcük
         olduğundan açıklamalarda neredeyse hiç geçmez; bu yüzden model tek başına "biyoloji"
-        girdisini tanıyamaz. Her alt konu için alt konu adı ve genel konu adı eklenir. Genel
-        konu adı her alt konuya bir kez yazıldığından olasılık alt konular arasında paylaşılır.
-        Bu örnekler yalnızca eğitim setine girer.
+        girdisini tanıyamaz. Her alt konu için alt konu adını ve genel konu adını ekliyorum.
+        Genel konu adını her alt konuya bir kez yazdığım için olasılık alt konular arasında
+        paylaşılıyor. Bu örnekleri yalnızca eğitim setine koyuyorum.
         """
         rows: list[Record] = []
         for general in GENERAL_TOPICS:
@@ -219,13 +227,14 @@ class DatasetBuilder:
         return rows
 
     def build(self) -> dict[str, list[Record]]:
-        """Tüm adımları çalıştırır ve her seti data/processed/<ad>.jsonl dosyasına yazar."""
+        """Tüm adımları çalıştırıyor ve her seti data/processed/<ad>.jsonl dosyasına
+        yazıyorum."""
         splits = self.split(self.clean(self.load_cards()))
         splits["train"] += self.taxonomy_seeds()
         splits["external"] = self.external()
         self.out_dir.mkdir(parents=True, exist_ok=True)
         for name, rows in splits.items():
-            # JSONL: her satır bir JSON kaydı; büyük dosyalar satır satır okunabilir.
+            # JSONL seçtim: her satır bir JSON kaydı; büyük dosyaları satır satır okuyabiliyorum.
             with (self.out_dir / f"{name}.jsonl").open("w", encoding="utf-8") as handle:
                 for row in rows:
                     handle.write(json.dumps(row, ensure_ascii=False) + "\n")
@@ -239,10 +248,10 @@ class DatasetBuilder:
 
 
 def leakage_report(splits: dict[str, list[Record]]) -> dict:
-    """Eğitim ile doğrulama/test arasında sızıntı olup olmadığını ölçer.
+    """Eğitim ile doğrulama/test arasında sızıntı olup olmadığını ölçüyorum.
 
-    Ortak grup ve birebir aynı metin sayısı 0 olmalıdır; yakın kopya oranı da çok düşük
-    olmalıdır. Aksi halde test başarısı gerçekte olduğundan yüksek görünür.
+    Ortak grup ve birebir aynı metin sayısının 0 olmasını, yakın kopya oranının da çok düşük
+    olmasını bekliyorum. Aksi halde test başarısı gerçekte olduğundan yüksek görünür.
     """
     train = splits["train"]
     train_groups = {r["group"] for r in train}
@@ -261,7 +270,7 @@ def leakage_report(splits: dict[str, list[Record]]) -> dict:
 def near_duplicate_rate(reference: list[Record], query: list[Record],
                         threshold: float = NEAR_DUPLICATE_COSINE) -> float:
     """query örneklerinden, reference içinde karakter n-gram kosinüs benzerliği eşiği aşan
-    bir komşusu olanların oranı."""
+    bir komşusu olanların oranını hesaplıyorum."""
     if not reference or not query:
         return 0.0
     vectorizer = TfidfVectorizer("char", (3, 5), preprocessor=normalize)
@@ -269,7 +278,7 @@ def near_duplicate_rate(reference: list[Record], query: list[Record],
     qry = vectorizer.transform([str(r["text"]) for r in query])
     hits = 0
     # Vektörler L2 normlu olduğu için iki vektörün çarpımı doğrudan kosinüs benzerliğidir.
-    # Bellek için sorgular 1000'lik parçalar halinde karşılaştırılır.
+    # Bellek için sorguları 1000'lik parçalar halinde karşılaştırıyorum.
     for start in range(0, qry.shape[0], 1000):
         similarity = qry[start:start + 1000] @ ref.T
         hits += int((np.asarray(similarity.max(axis=1).todense()).ravel() >= threshold).sum())
@@ -277,7 +286,7 @@ def near_duplicate_rate(reference: list[Record], query: list[Record],
 
 
 def load_split(name: str, processed_dir: Path = PROCESSED_DIR) -> list[Record]:
-    """Hazırlanmış bir seti (train, val, test, ood_val, ood_unseen, external) okur."""
+    """Hazırladığım bir seti (train, val, test, ood_val, ood_unseen, external) okuyorum."""
     path = processed_dir / f"{name}.jsonl"
     if not path.exists():
         raise DatasetError(f"{path} bulunamadı; önce veri seti hazırlanmalı.")

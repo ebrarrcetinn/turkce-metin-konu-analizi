@@ -1,9 +1,9 @@
 """
 Dosya   : src/models/trainer.py
 Konu    : Model Eğitimi
-Açıklama: Naive Bayes ile softmax regresyonu doğrulama setinde karşılaştırır, iyi olanı
-          seçer, sıcaklık ve güven eşiğini belirler ve modeli eğitim + doğrulama verisiyle
-          yeniden eğitip kaydeder.
+Açıklama: Bu dosyada amacım Naive Bayes ile softmax regresyonu doğrulama setinde
+          karşılaştırmak, iyi olanı seçmek, sıcaklık ve güven eşiğini belirlemek ve modeli
+          eğitim + doğrulama verisiyle yeniden eğitip kaydetmek.
 Yazar   : Ebrar Cemre Çetin
 Tarih   : 25.09.2026
 """
@@ -50,19 +50,19 @@ from src.models.topic_model import (
 
 logger = logging.getLogger(__name__)
 
-# Başarı 9 genel konu (8 konu + Diğer) üzerinden ölçülür; alt konu ayrıca raporlanır.
+# Başarıyı 9 genel konu (8 konu + Diğer) üzerinden ölçüyorum; alt konuyu ayrıca raporluyorum.
 GENERAL_LABELS = list(ALL_GENERAL_LABELS)
 
 
 def joint_labels(rows: list[Record]) -> list[str]:
-    """Kayıtlardan modelin öğrendiği birleşik etiketleri üretir ("Fizik > Optik")."""
+    """Kayıtlardan modelin öğrendiği birleşik etiketleri üretiyorum ("Fizik > Optik")."""
     return [joint_label(str(r["general"]), r["subtopic"]) for r in rows]
 
 
 def general_predictions(classes: list[str], probabilities: np.ndarray,
                         min_confidence: float | None = None) -> list[str]:
-    """Her örnek için genel konu tahmini. Eşik verilirse belirsiz kararlar değerlendirmede
-    "Diğer" sayılır (sistem o metin için konu iddia etmemiş olur)."""
+    """Her örnek için genel konu tahmini yapıyorum. Eşik verilirse belirsiz kararları
+    değerlendirmede "Diğer" sayıyorum (sistem o metin için konu iddia etmemiş olur)."""
     labels = []
     for row in probabilities:
         general, _ = aggregate(classes, row)
@@ -79,14 +79,14 @@ def general_macro_f1(y_true: list[str], y_pred: list[str]) -> float:
 
 
 class Trainer:
-    """Modeli eğitir: algoritma seçimi, kalibrasyon, eşik seçimi ve son eğitim.
+    """Amacım modeli eğitmek: algoritma seçimi, kalibrasyon, eşik seçimi ve son eğitim.
 
-    Veri: data/processed altındaki JSONL dosyaları (DatasetBuilder üretir).
+    Veri: data/processed altındaki JSONL dosyaları (bunları DatasetBuilder ile üretiyorum).
       train   : modelin öğrendiği örnekler
       val     : algoritma seçimi, erken durdurma, sıcaklık ve eşik seçimi
-      ood_val : eğitimde hiç olmayan konular; yalnızca eşik seçiminde kullanılır
-    Test, ood_unseen ve external setlerine eğitim sırasında hiç dokunulmaz; bunlar yalnızca
-    `Evaluator` tarafından en sonda bir kez ölçülür.
+      ood_val : eğitimde hiç olmayan konular; yalnızca eşik seçiminde kullanıyorum
+    Test, ood_unseen ve external setlerine eğitim sırasında hiç dokunmuyorum; bunları yalnızca
+    en sonda `Evaluator` ile bir kez ölçüyorum.
     """
 
     def __init__(self, processed_dir: Path = PROCESSED_DIR, model_path: Path = MODEL_PATH,
@@ -106,14 +106,15 @@ class Trainer:
         y_train, y_val = joint_labels(train), joint_labels(val)
         val_general = [str(r["general"]) for r in val]
 
-        # 1) Metinler sayıya çevrilir. Sözlük ve IDF yalnızca eğitim verisinden öğrenilir;
-        #    doğrulama metinleri bu sözlükle dönüştürülür (doğrulamaya bilgi sızmaz).
+        # 1) Metinleri sayıya çeviriyorum. Sözlüğü ve IDF'i yalnızca eğitim verisinden
+        #    öğreniyorum; doğrulama metinlerini bu sözlükle dönüştürüyorum (doğrulamaya bilgi
+        #    sızmıyor).
         vectorizer = build_vectorizer()
         x_train = vectorizer.fit_transform(train_texts)
         x_val = vectorizer.transform(val_texts)
         logger.info("Özellik sayısı: %d", vectorizer.n_features)
 
-        # 2) Naive Bayes ve softmax regresyon eğitilip doğrulama setinde karşılaştırılır.
+        # 2) Naive Bayes ve softmax regresyonu eğitip doğrulama setinde karşılaştırıyorum.
         nb = MultinomialNaiveBayes(alpha=NB_ALPHA).fit(x_train, y_train)
         nb_f1 = general_macro_f1(val_general,
                                  general_predictions(nb.classes, softmax(
@@ -125,7 +126,7 @@ class Trainer:
         use_softmax = sm_f1 >= nb_f1
         chosen: SoftmaxRegression | MultinomialNaiveBayes = softmax_model if use_softmax else nb
 
-        # 3) Sıcaklık ve güven eşiği seçilen modelin doğrulama çıktılarıyla belirlenir.
+        # 3) Sıcaklığı ve güven eşiğini seçilen modelin doğrulama çıktılarıyla belirliyorum.
         logits = chosen.decision_function(x_val)
         temperature = self._fit_temperature(chosen.classes, logits, y_val)
         ood_logits = chosen.decision_function(
@@ -133,20 +134,21 @@ class Trainer:
         grid = self._threshold_grid(chosen.classes, np.vstack([logits, ood_logits]),
                                     temperature,
                                     val_general + [str(r["general"]) for r in ood_val])
-        # En yüksek macro F1'i veren eşik; eşitlikte düşük eşik tercih edilir.
+        # En yüksek macro F1'i veren eşiği alıyorum; eşitlikte düşük eşiği tercih ediyorum.
         best = max(grid, key=lambda row: (row["macro_f1"], -row["threshold"]))
         min_confidence = float(best["threshold"])
 
-        # 4) Seçimler bittikten sonra model eğitim + doğrulama verisinin tamamıyla yeniden
-        #    eğitilir: daha fazla örnek daha iyi model demektir. Epoch sayısı erken
-        #    durdurmanın bulduğu değerdir; sıcaklık ve eşik 3. adımdaki değerlerdir.
+        # 4) Seçimler bittikten sonra modeli eğitim + doğrulama verisinin tamamıyla yeniden
+        #    eğitiyorum: daha fazla örnek daha iyi model demektir. Epoch sayısı olarak erken
+        #    durdurmanın bulduğu değeri, sıcaklık ve eşik olarak 3. adımdaki değerleri
+        #    kullanıyorum.
         final_vectorizer = build_vectorizer()
         x_all = final_vectorizer.fit_transform(train_texts + val_texts)
         weights, bias = self._fit_final(use_softmax, x_all, y_train + y_val,
                                         softmax_model.best_epoch)
 
         algorithm = "softmax_regression" if use_softmax else "multinomial_naive_bayes"
-        # Eğitim bilgileri model dosyasına ve veritabanındaki model_metadata tablosuna yazılır.
+        # Eğitim bilgilerini model dosyasına ve veritabanındaki model_metadata tablosuna yazıyorum.
         metadata = {
             "model_name": f"turkce-konu-{algorithm}",
             "model_version": MODEL_VERSION,
@@ -161,7 +163,7 @@ class Trainer:
                         "val_thresholded": best},
             "thresholds": {"min_confidence": min_confidence,
                            "temperature": round(temperature, 4)},
-            # Ağırlıkların parmak izi: hangi kaydın hangi modelle yapıldığı ayırt edilebilir.
+            # Ağırlıkların parmak izi: hangi kaydın hangi modelle yapıldığını ayırt edebiliyorum.
             "weights_sha256": hashlib.sha256(weights.tobytes() + bias.tobytes()).hexdigest(),
         }
         model = TopicModel(final_vectorizer, chosen.classes, weights, bias, temperature,
@@ -178,7 +180,7 @@ class Trainer:
 
     def _train_softmax(self, x_train, y_train: list[str], x_val,
                        val_general: list[str]) -> SoftmaxRegression:
-        """Softmax regresyonu, her epoch sonunda doğrulama macro F1'i ölçerek eğitir."""
+        """Softmax regresyonu, her epoch sonunda doğrulama macro F1'i ölçerek eğitiyorum."""
         def validation_score(model: SoftmaxRegression) -> float:
             return general_macro_f1(val_general, general_predictions(
                 model.classes, model.predict_proba(x_val)))
@@ -196,11 +198,11 @@ class Trainer:
     @staticmethod
     def _threshold_grid(classes: list[str], logits: np.ndarray, temperature: float,
                         truth: list[str]) -> list[dict]:
-        """Her aday güven eşiği için macro F1.
+        """Her aday güven eşiği için macro F1 hesaplıyorum.
 
-        Doğrulama seti ile eğitimde hiç görülmemiş kategoriler (ood_val) birlikte kullanılır.
+        Doğrulama seti ile eğitimde hiç görülmemiş kategorileri (ood_val) birlikte kullanıyorum.
         Eşik düşükse model tanımadığı konulara da konu atar, yüksekse doğru konuları da
-        "Belirsiz" sayar; ikisini en iyi dengeleyen eşik seçilir.
+        "Belirsiz" sayar; ikisini en iyi dengeleyen eşiği seçiyorum.
         """
         probabilities = softmax(logits / temperature)
         grid = []
@@ -213,22 +215,22 @@ class Trainer:
     @staticmethod
     def _fit_final(use_softmax: bool, features, labels: list[str],
                    epochs: int) -> tuple[np.ndarray, np.ndarray]:
-        """Seçilen algoritmayı tüm veriyle eğitip (ağırlık, bias) döndürür."""
+        """Seçilen algoritmayı tüm veriyle eğitip (ağırlık, bias) döndürüyorum."""
         if use_softmax:
             final = SoftmaxRegression(learning_rate=SOFTMAX_LEARNING_RATE, l2=SOFTMAX_L2,
                                       epochs=epochs, seed=RANDOM_SEED).fit(features, labels)
             return final.weights, final.bias
         # Naive Bayes skoru da x · log P(özellik | sınıf) + log P(sınıf) biçiminde doğrusaldır;
-        # aynı TopicModel ile ağırlık ve bias olarak saklanabilir.
+        # bu yüzden onu da aynı TopicModel ile ağırlık ve bias olarak saklayabiliyorum.
         final_nb = MultinomialNaiveBayes(alpha=NB_ALPHA).fit(features, labels)
         return (final_nb.feature_log_prob.astype(np.float32),
                 final_nb.class_log_prior.astype(np.float32))
 
 
 def _dataset_info(n_train: int, n_val: int, n_ood_val: int) -> dict:
-    """Veri kaynağının sürümü (Tabu deposunun commit'i) ve eğitim boyutları."""
+    """Veri kaynağının sürümünü (Tabu deposunun commit'i) ve eğitim boyutlarını topluyorum."""
     info: dict = {"version": "bilinmiyor", "train": n_train, "val": n_val, "ood_val": n_ood_val}
-    path = RAW_DIR / "provenance.json"  # sources.fetch_all indirme sırasında yazar
+    path = RAW_DIR / "provenance.json"  # bu dosyayı indirirken sources.fetch_all'da yazıyorum
     if path.exists():
         provenance = json.loads(path.read_text(encoding="utf-8"))
         info["version"] = provenance.get("taboo", {}).get("commit", "bilinmiyor")[:12]

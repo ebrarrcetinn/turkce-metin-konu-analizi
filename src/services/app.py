@@ -1,9 +1,9 @@
 """
 Dosya   : src/services/app.py
 Konu    : Uygulama Servisi
-Açıklama: Bir mesaj için sınıflandırma, sohbet takibi, sorgu üretimi, internet araması ve
-          veritabanı kaydı adımlarını sırayla çalıştırır. Web veya veritabanı hataları
-          sınıflandırmayı durdurmaz.
+Açıklama: Bu dosyada amacım bir mesaj için sınıflandırma, sohbet takibi, sorgu üretimi,
+          internet araması ve veritabanı kaydı adımlarını sırayla çalıştırmak. Web veya
+          veritabanı hatalarının sınıflandırmayı durdurmasına izin vermiyorum.
 Yazar   : Ebrar Cemre Çetin
 Tarih   : 27.09.2026
 """
@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class HistoryItem:
-    """`geçmiş` komutunda gösterilen bir mesaj."""
+    """`geçmiş` komutunda gösterdiğim bir mesaj."""
 
     index: int
     text: str
@@ -47,7 +47,7 @@ class HistoryItem:
 
 @dataclass
 class TurnResult:
-    """Bir mesajın tüm işlenme sonucu; konsol bunu ekrana yazar."""
+    """Bir mesajın tüm işlenme sonucu; konsolda bunu ekrana yazıyorum."""
 
     prediction: Prediction
     theme: Theme | None = None
@@ -59,14 +59,15 @@ class TurnResult:
 
 
 def new_session_id() -> str:
-    return uuid.uuid4().hex  # rastgele, çakışmayan oturum kimliği
+    return uuid.uuid4().hex  # rastgele, çakışmayan bir oturum kimliği üretiyorum
 
 
 class ChatService:
-    """Konsoldan bağımsız uygulama mantığı.
+    """Burada amacım konsoldan bağımsız uygulama mantığını bir arada tutmak.
 
-    Veritabanı ve arama istemcisi dışarıdan verilir (dependency injection): testlerde sahte
-    istemci veya geçici veritabanı kullanılabilir, `db=None` ile kayıtsız da çalışır.
+    Veritabanını ve arama istemcisini dışarıdan veriyorum (dependency injection): testlerde
+    sahte istemci veya geçici veritabanı kullanabiliyorum, `db=None` ile kayıtsız da
+    çalışıyor.
     """
 
     def __init__(self, classifier: TopicModel, db: Database | None,
@@ -81,17 +82,17 @@ class ChatService:
         self.tracker = tracker or ConversationTracker()
         self.history: list[HistoryItem] = []
         self.session_id = new_session_id()
-        self._clock = clock  # testlerde zamanı ileri almak için değiştirilebilir
-        self._offline_until = 0.0  # bu zamana kadar internet denenmez
+        self._clock = clock  # testlerde zamanı ileri alabilmek için bunu değiştiriyorum
+        self._offline_until = 0.0  # bu zamana kadar interneti denemiyorum
         if self.db:
             self._db_call(self.db.register_model, classifier.metadata)
         self._start_session()
 
     def _db_call(self, fn: Callable[..., Any], *args: Any) -> tuple[Any, str | None]:
-        """DB işlemini çalıştırır; hata olursa loglar ve (None, hata) döndürür.
+        """DB işlemini çalıştırıyorum; hata olursa logluyor ve (None, hata) döndürüyorum.
 
-        Veritabanı hatası (disk dolu, dosya kilitli ...) kullanıcıya uyarı olarak gösterilir;
-        sınıflandırma ve sohbet takibi çalışmaya devam eder.
+        Veritabanı hatasını (disk dolu, dosya kilitli ...) kullanıcıya uyarı olarak
+        gösteriyorum; sınıflandırma ve sohbet takibi çalışmaya devam ediyor.
         """
         try:
             return fn(*args), None
@@ -105,7 +106,7 @@ class ChatService:
         logger.info("Oturum başladı: %s", self.session_id)
 
     def reset(self) -> str:
-        """Yeni sohbet bağlamı başlatır; eski kayıtlar DB'de kalır."""
+        """Yeni sohbet bağlamı başlatıyorum; eski kayıtlar DB'de kalıyor."""
         if self.db:
             self._db_call(self.db.end_session, self.session_id)
         self.tracker.reset()
@@ -119,8 +120,8 @@ class ChatService:
             self._db_call(self.db.end_session, self.session_id)
 
     def process(self, text: str) -> TurnResult:
-        """Bir kullanıcı mesajını baştan sona işler."""
-        # 1) Metnin genel konusu ve alt konuları
+        """Amacım bir kullanıcı mesajını baştan sona işlemek."""
+        # 1) Önce metnin genel konusunu ve alt konularını buluyorum
         prediction = self.classifier.predict(text)
         result = TurnResult(prediction=prediction)
         if prediction.status == STATUS_EMPTY:
@@ -129,14 +130,14 @@ class ChatService:
         if prediction.truncated:
             result.warnings.append("Metin çok uzun olduğu için kırpılarak analiz edildi.")
 
-        # 2) Sohbetin genel konusu: bu mesajın olasılıkları önceki mesajlarla birleştirilir.
+        # 2) Sohbetin genel konusu: bu mesajın olasılıklarını önceki mesajlarla birleştiriyorum.
         self.tracker.update(prediction.general_scores, prediction.joint_subtopic_scores)
         theme = self.tracker.theme()
         logger.debug("Sohbet skorları: %s | tema: %s", self.tracker.snapshot(), theme.label)
         result.theme = theme
 
         # 3) Arama sorgusu: sohbet konusu + (mesajın konusu sohbet konusuna dahilse)
-        #    mesajdaki ayırt edici sözcükler. Konu dışı bir mesajın sözcükleri eklenmez.
+        #    mesajdaki ayırt edici sözcükler. Konu dışı bir mesajın sözcüklerini eklemiyorum.
         theme_topics = {t for t, _ in theme.topics}
         keywords = (self.classifier.keywords(text, prediction.top_guess)
                     if prediction.top_guess in theme_topics else [])
@@ -145,10 +146,10 @@ class ChatService:
         index = len(self.history) + 1
         self.history.append(HistoryItem(index, text, prediction, theme.label))
 
-        # 4) Metin, sonuç ve sohbet konusu veritabanına yazılır.
+        # 4) Metni, sonucu ve sohbet konusunu veritabanına yazıyorum.
         theme_id = self._save_turn(self.db, result, theme, index) if self.db else None
 
-        # 5) İnternet araması ve sonuçların kaydı
+        # 5) İnternet araması yapıp sonuçları kaydediyorum
         if self.web_enabled and result.query:
             result.search = self._safe_search(result.query)
             if result.search.status == STATUS_OK and self.db and theme_id is not None:
@@ -163,12 +164,12 @@ class ChatService:
 
     def _save_turn(self, db: Database, result: TurnResult, theme: Theme,
                    index: int) -> int | None:
-        """metinler ve sohbet_konulari tablolarına yazar; sohbet konusu satırının id'sini döner."""
+        """metinler ve sohbet_konulari tablolarına yazıp sohbet konusu satırının id'sini dönerim."""
         theme_id = None
         metin_id, err = self._db_call(db.save_text, self.session_id, index,
                                       result.prediction.to_dict(), self.classifier.version)
         if metin_id is not None:
-            # Sohbet konusu, onu oluşturan mesaja metin_id ile bağlanır.
+            # Sohbet konusunu, onu oluşturan mesaja metin_id ile bağlıyorum.
             theme_id, err = self._db_call(db.save_theme, self.session_id, metin_id,
                                           theme.to_dict(), result.query)
         result.saved_to_db = err is None and theme_id is not None
@@ -178,12 +179,12 @@ class ChatService:
     def _safe_search(self, query: str) -> SearchOutcome:
         try:
             return self._search(query)
-        except Exception as exc:  # web katmanı hiçbir koşulda akışı kırmamalı
+        except Exception as exc:  # web katmanının hiçbir koşulda akışı kırmasını istemiyorum
             logger.exception("Beklenmeyen arama hatası")
             return SearchOutcome(query=query, status=STATUS_ERROR, error=str(exc))
 
     def _search(self, query: str) -> SearchOutcome:
-        """Önce önbellek, sonra (bağlantı varsa) internet."""
+        """Önce önbelleğe, sonra (bağlantı varsa) internete bakıyorum."""
         key = normalize(query)  # "Kuantum Bilgisayarlar" ile "kuantum bilgisayarlar" aynı kayıt
         if self.db:
             cached, _ = self._db_call(self.db.cache_get, key)
@@ -191,7 +192,7 @@ class ChatService:
                 results = [SearchResult(**r) for r in cached["results"]]
                 return SearchOutcome(query=query, status=STATUS_OK, results=results,
                                      source=cached["source"], from_cache=True)
-        # Son denemede internet yoksa bekleme süresi dolana kadar tekrar denenmez; her mesajda
+        # Son denemede internet yoksa bekleme süresi dolana kadar tekrar denemiyorum; her mesajda
         # zaman aşımını beklemek konsolu yavaşlatırdı.
         if self._clock() < self._offline_until:
             return SearchOutcome(query=query, status=STATUS_OFFLINE,

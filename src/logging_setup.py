@@ -1,8 +1,8 @@
 """
 Dosya   : src/logging_setup.py
 Konu    : Loglama Ayarları
-Açıklama: Uygulama genelinde log biçimini ve seviyesini ayarlar; istenirse logları
-          logs/app.log dosyasına da yazar.
+Açıklama: Bu dosyada amacım uygulama genelinde log biçimini ve seviyesini ayarlamak;
+          istenirse logları logs/app.log dosyasına da yazıyorum.
 Yazar   : Ebrar Cemre Çetin
 Tarih   : 23.09.2026
 """
@@ -19,12 +19,12 @@ _FORMAT = "%(asctime)s %(levelname)s %(name)s: %(message)s"
 
 
 def setup_logging(level: str | None = None, to_file: bool = False) -> None:
-    """Konsola (varsayılan WARNING) ve isteğe bağlı olarak logs/app.log dosyasına (INFO) yazar."""
+    """Logları konsola (varsayılan WARNING) ve istenirse logs/app.log dosyasına (INFO) yazıyorum."""
     root = logging.getLogger()
-    if root.handlers:  # iki kez çağrılırsa aynı satırlar iki kez yazılmasın
+    if root.handlers:  # iki kez çağrılırsa aynı satırları iki kez yazmıyorum
         return
-    # Kök logger her şeyi geçirir; asıl filtreleme her çıkışın (konsol, dosya) kendi
-    # seviyesinde yapılır. Böylece konsol sade kalırken dosyada ayrıntı tutulur.
+    # Kök logger'dan her şeyi geçiriyorum; asıl filtrelemeyi her çıkışın (konsol, dosya)
+    # kendi seviyesinde yapıyorum. Böylece konsol sade kalırken dosyada ayrıntı tutuyorum.
     root.setLevel(logging.DEBUG)
     console = logging.StreamHandler(sys.stderr)
     console.setLevel(getattr(logging, (level or LOG_LEVEL).upper(), logging.WARNING))
@@ -34,7 +34,7 @@ def setup_logging(level: str | None = None, to_file: bool = False) -> None:
         try:
             LOG_DIR.mkdir(parents=True, exist_ok=True)
             file_handler = logging.FileHandler(LOG_DIR / "app.log", encoding="utf-8")
-        except OSError as exc:  # disk yazma hatası uygulamayı durdurmamalı
+        except OSError as exc:  # disk yazma hatasının uygulamayı durdurmasını istemedim
             root.warning("Log dosyası açılamadı, yalnızca konsol kullanılacak: %s", exc)
         else:
             file_handler.setLevel(logging.INFO)

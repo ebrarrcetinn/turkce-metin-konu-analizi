@@ -1,9 +1,9 @@
 """
 Dosya   : src/models/topic_model.py
 Konu    : Konu Sınıflandırma Modeli
-Açıklama: Eğitilmiş modeli temsil eder: metinden genel konu ve alt konu olasılıklarını
-          hesaplar, güven eşiğine göre karar verir, anahtar sözcük çıkarır ve modeli
-          .npz/.json dosyalarına kaydedip yükler.
+Açıklama: Bu dosyada amacım eğitilmiş modeli temsil etmek: metinden genel konu ve alt konu
+          olasılıklarını hesaplıyor, güven eşiğine göre karar veriyor, anahtar sözcük
+          çıkarıyor ve modeli .npz/.json dosyalarına kaydedip yüklüyorum.
 Yazar   : Ebrar Cemre Çetin
 Tarih   : 25.09.2026
 """
@@ -39,9 +39,10 @@ from src.preprocessing.text import (
     normalize,
 )
 
-# Model genel konu ve alt konuyu ayrı ayrı değil, tek bir birleşik etiket olarak öğrenir:
+# Modelin genel konu ve alt konuyu ayrı ayrı değil, tek bir birleşik etiket olarak
+# öğrenmesini seçtim:
 # "Fizik > Kuantum Mekaniği", "Teknoloji > Kuantum Bilgisayarlar", ... ve "Diğer" (39 sınıf).
-# Böylece alt konu her zaman kendi genel konusuyla tutarlı olur.
+# Böylece alt konu her zaman kendi genel konusuyla tutarlı oluyor.
 JOINT_SEPARATOR = " > "
 
 # Tahmin durumları
@@ -49,12 +50,13 @@ STATUS_OK = "ok"  # taksonomideki bir konu, yeterli güvenle
 STATUS_UNCERTAIN = "uncertain"  # en olası konu var ama güven eşiğin altında
 STATUS_OUT_OF_SCOPE = "out_of_scope"  # en olası sınıf "Diğer"
 STATUS_EMPTY = "empty"  # metinde anlamlı sözcük yok
-# Model dosyasının biçim sürümü; biçim değişirse eski dosyalar yanlış okunmak yerine reddedilir.
+# Model dosyasının biçim sürümü; biçim değişirse eski dosyaları yanlış okumak yerine
+# reddediyorum.
 FORMAT_VERSION = 1
 
 
 class ModelFileError(RuntimeError):
-    """Model dosyası bulunamadı ya da bozuk."""
+    """Model dosyasını bulamadığımda ya da dosya bozuk olduğunda bu hatayı veriyorum."""
 
 
 def split_joint(label: str) -> tuple[str, str | None]:
@@ -70,12 +72,12 @@ def joint_label(general: str, subtopic: str | None) -> str:
 
 
 def build_vectorizer() -> CombinedVectorizer:
-    """Sözcük (F5 kök, 1-2 gram) ve karakter (2-5 gram) TF-IDF özellikleri.
+    """Sözcük (F5 kök, 1-2 gram) ve karakter (2-5 gram) TF-IDF özelliklerini kuruyorum.
 
-    Eğitimde ve model yüklenirken aynı fonksiyon kullanılır; ayarlar tek yerde durur.
+    Eğitimde ve model yüklenirken aynı fonksiyonu kullanıyorum; ayarlar tek yerde duruyor.
     """
-    # Stopword'ler de F5 köklemeden geçirilir, çünkü sözcük özellikleri köklenmiş metinden
-    # çıkarılır ("olarak" -> "olara").
+    # Stopword'leri de F5 köklemeden geçiriyorum, çünkü sözcük özelliklerini köklenmiş
+    # metinden çıkarıyorum ("olarak" -> "olara").
     stop_words = {normalize(word)[:5] for word in TURKISH_STOPWORDS}
     return CombinedVectorizer([
         TfidfVectorizer("word", (1, 2), min_df=1, preprocessor=f5_preprocess,
@@ -86,20 +88,20 @@ def build_vectorizer() -> CombinedVectorizer:
 
 @dataclass
 class Prediction:
-    """Bir metin için modelin çıktısı; konsola yazılır ve veritabanına kaydedilir."""
+    """Bir metin için modelin çıktısı; bunu konsola yazdırıyor ve veritabanına kaydediyorum."""
 
     text: str
     status: str
-    general: str | None  # gösterilen genel konu ("Belirsiz" / "Diğer" olabilir)
+    general: str | None  # gösterdiğim genel konu ("Belirsiz" / "Diğer" olabilir)
     confidence: float  # en olası genel konunun olasılığı
     general_scores: dict[str, float] = field(default_factory=dict)  # tüm genel konular
-    subtopics: list[tuple[str, float]] = field(default_factory=list)  # gösterilen alt konular
+    subtopics: list[tuple[str, float]] = field(default_factory=list)  # gösterdiğim alt konular
     related_topics: list[tuple[str, float]] = field(default_factory=list)  # ikincil konular
     top_guess: str | None = None  # eşikten bağımsız en olası genel konu
-    # Her genel konunun alt konu olasılıkları; sohbet takibinde kullanılır.
+    # Her genel konunun alt konu olasılıkları; sohbet takibinde kullanıyorum.
     joint_subtopic_scores: dict[str, dict[str, float]] = field(default_factory=dict)
     latency_ms: float = 0.0
-    truncated: bool = False  # metin MAX_INPUT_CHARS'tan uzun olduğu için kırpıldı mı
+    truncated: bool = False  # metin MAX_INPUT_CHARS'tan uzun olduğu için kırptım mı
 
     def to_dict(self) -> dict[str, Any]:
         payload = asdict(self)
@@ -109,11 +111,11 @@ class Prediction:
 
 
 def aggregate(classes: list[str], probabilities: np.ndarray) -> tuple[dict, dict]:
-    """39 birleşik sınıfın olasılığından genel konu ve alt konu olasılıklarını çıkarır.
+    """39 birleşik sınıfın olasılığından genel konu ve alt konu olasılıklarını çıkarıyorum.
 
-    Genel konu olasılığı, alt konularının olasılıklarının toplamıdır:
+    Genel konu olasılığını, alt konularının olasılıklarının toplamı olarak alıyorum:
     P(Fizik) = P(Fizik > Optik) + P(Fizik > Kuantum Mekaniği) + ...
-    Alt konu ise genel konu içindeki payıyla (koşullu olasılık) verilir:
+    Alt konuyu ise genel konu içindeki payıyla (koşullu olasılık) veriyorum:
     P(Optik | Fizik) = P(Fizik > Optik) / P(Fizik)
     """
     general: dict[str, float] = defaultdict(float)
@@ -130,10 +132,10 @@ def aggregate(classes: list[str], probabilities: np.ndarray) -> tuple[dict, dict
 
 def select_subtopics(conditional: dict[str, float], min_score: float = SUBTOPIC_MIN_SCORE,
                      limit: int = MAX_SUBTOPICS) -> list[tuple[str, float]]:
-    """En olası alt konu her zaman, diğerleri payı `min_score` üstündeyse listelenir.
+    """En olası alt konuyu her zaman, diğerlerini payı `min_score` üstündeyse listeliyorum.
 
-    Örnek: "biyoloji" girdisinde Botanik %23, Ekoloji %22, Genetik %21 çıkar; metin tek bir
-    alt konuya işaret etmediği için üçü de gösterilir.
+    Örnek: "biyoloji" girdisinde Botanik %23, Ekoloji %22, Genetik %21 çıkıyor; metin tek
+    bir alt konuya işaret etmediği için üçünü de gösteriyorum.
     """
     ranked = sorted(conditional.items(), key=lambda item: item[1], reverse=True)
     chosen = ranked[:1] + [item for item in ranked[1:] if item[1] >= min_score]
@@ -141,11 +143,11 @@ def select_subtopics(conditional: dict[str, float], min_score: float = SUBTOPIC_
 
 
 def decide(general_scores: dict[str, float], min_confidence: float) -> tuple[str, str, float]:
-    """(durum, gösterilecek etiket, güven) döndürür."""
+    """(durum, göstereceğim etiket, güven) üçlüsünü döndürüyorum."""
     top, confidence = max(general_scores.items(), key=lambda item: item[1])
     if top == OTHER_LABEL:
         return STATUS_OUT_OF_SCOPE, OTHER_LABEL, confidence
-    # Eşik eğitimde seçilir (şu an 0,60). Altında kalan tahminde model konu iddia etmez.
+    # Eşiği eğitimde seçiyorum (şu an 0,60). Altında kalan tahminde model konu iddia etmiyor.
     if confidence < min_confidence:
         return STATUS_UNCERTAIN, UNCERTAIN_LABEL, confidence
     return STATUS_OK, top, confidence
@@ -154,16 +156,16 @@ def decide(general_scores: dict[str, float], min_confidence: float) -> tuple[str
 class TopicModel:
     """Eğitilmiş konu modeli: vektörleştirici + doğrusal skor (xW + b) + sıcaklık.
 
-    Bu sınıf yalnızca tahmin yapar; eğitimi `Trainer` yapar ve sonucu bu sınıfla kaydeder.
-    Naive Bayes de softmax regresyon da "skor = xW + b" biçiminde olduğundan hangisi
-    seçilirse seçilsin aynı sınıfla saklanıp kullanılabilir.
+    Bu sınıfta amacım yalnızca tahmin yapmak; eğitimi `Trainer` yapıyor ve sonucu bu sınıfla
+    kaydediyor. Naive Bayes de softmax regresyon da "skor = xW + b" biçiminde olduğundan
+    hangisini seçersem seçeyim aynı sınıfla saklayıp kullanabiliyorum.
     """
 
     def __init__(self, vectorizer: CombinedVectorizer, classes: list[str], weights: np.ndarray,
                  bias: np.ndarray, temperature: float, min_confidence: float,
                  metadata: dict | None = None):
         # Boyut uyuşmazlığı, yanlış eşleşmiş model dosyası demektir; sessizce yanlış tahmin
-        # üretmek yerine hemen hata verilir.
+        # üretmek yerine hemen hata veriyorum.
         if weights.shape != (vectorizer.n_features, len(classes)):
             raise ModelFileError("Ağırlık matrisi boyutu vektörleştiriciyle uyuşmuyor")
         self.vectorizer = vectorizer
@@ -172,14 +174,14 @@ class TopicModel:
         self.bias = bias
         self.temperature = temperature
         self.min_confidence = min_confidence
-        self.metadata = metadata or {}  # sürüm, eğitim zamanı, metrikler (veritabanına da yazılır)
+        self.metadata = metadata or {}  # sürüm, eğitim zamanı, metrikler; DB'ye de yazıyorum
 
     @property
     def version(self) -> str:
         return str(self.metadata.get("model_version", "bilinmiyor"))
 
     def predict_proba(self, texts: list[str]) -> np.ndarray:
-        """Her metin için 39 sınıfın kalibre edilmiş olasılıkları."""
+        """Her metin için 39 sınıfın kalibre edilmiş olasılıklarını hesaplıyorum."""
         logits = np.asarray(self.vectorizer.transform(texts) @ self.weights) + self.bias
         return softmax(logits / self.temperature)
 
@@ -188,17 +190,17 @@ class TopicModel:
         clean = text.strip()
         truncated = len(clean) > MAX_INPUT_CHARS
         clean = clean[:MAX_INPUT_CHARS]
-        # "!!!", "12345" gibi içerik taşımayan girdiler sınıflandırılmaz.
+        # "!!!", "12345" gibi içerik taşımayan girdileri sınıflandırmıyorum.
         if not content_tokens(clean):
             return Prediction(text=text, status=STATUS_EMPTY, general=None, confidence=0.0)
 
         general, conditional = aggregate(self.classes, self.predict_proba([clean])[0])
         status, label, confidence = decide(general, self.min_confidence)
         top_guess = max(general, key=lambda topic: general[topic])
-        # Alt konular yalnızca konu kesinleştiyse gösterilir.
+        # Alt konuları yalnızca konu kesinleştiyse gösteriyorum.
         subtopics = select_subtopics(conditional.get(label, {})) if status == STATUS_OK else []
         # İlişkili konular: ana konu dışında belirgin olasılık alan diğer konular. "kuantum"
-        # girdisinde Teknoloji ana konu, Fizik ilişkili konu olarak görünür.
+        # girdisinde Teknoloji ana konu, Fizik ilişkili konu olarak görünüyor.
         related = [(topic, round(score, 4)) for topic, score in
                    sorted(general.items(), key=lambda item: item[1], reverse=True)
                    if topic not in (top_guess, OTHER_LABEL) and score >= RELATED_TOPIC_MIN_SCORE]
@@ -212,18 +214,19 @@ class TopicModel:
             latency_ms=round((time.perf_counter() - start) * 1000, 3), truncated=truncated)
 
     def keywords(self, text: str, general: str | None, limit: int = 4) -> list[str]:
-        """Metindeki, verilen genel konu için modelde en yüksek ağırlığa sahip sözcükler.
+        """Burada amacım metindeki, verilen genel konu için modelde en yüksek ağırlığa sahip
+        sözcükleri bulmak.
 
-        Arama sorgusunu zenginleştirmek için kullanılır. Ağırlıklar modelin öğrendiği
+        Bunları arama sorgusunu zenginleştirmek için kullanıyorum. Ağırlıklar modelin öğrendiği
         değerlerdir: "kübit" sözcüğünün Teknoloji ağırlığı yüksek, "kullanır" sözcüğününki
-        düşüktür. Böylece sorguya konuyu gerçekten belirleyen sözcükler eklenir.
+        düşüktür. Böylece sorguya konuyu gerçekten belirleyen sözcükleri ekliyorum.
         """
         if not general:
             return []
-        # Bu genel konuya ait tüm alt konu sınıflarının sütunları
+        # Bu genel konuya ait tüm alt konu sınıflarının sütunlarını topluyorum
         rows = [i for i, label in enumerate(self.classes) if split_joint(label)[0] == general]
-        # Sözcük vektörleştiricisi birleşik vektörün ilk parçası olduğu için sözlüğündeki
-        # sütun numaraları ağırlık matrisinin satır numaralarıyla aynıdır.
+        # Sözcük vektörleştiricisini birleşik vektörün ilk parçası yaptığım için sözlüğündeki
+        # sütun numaraları ağırlık matrisinin satır numaralarıyla aynı oluyor.
         vocabulary = self.vectorizer.vectorizers[0].vocabulary
         scored: dict[str, float] = {}
         for token in normalize(text).split():
@@ -237,10 +240,11 @@ class TopicModel:
         return [t for t, _ in sorted(scored.items(), key=lambda item: -item[1])[:limit]]
 
     def save(self, path: Path = MODEL_PATH) -> None:
-        """Ağırlıklar .npz, sözlük ve ayarlar .json dosyasına yazılır.
+        """Ağırlıkları .npz, sözlüğü ve ayarları .json dosyasına yazıyorum.
 
-        pickle kullanılmaz: pickle dosyası açılırken içindeki kodu çalıştırabilir. .npz yalnızca
-        sayı dizisi, .json yalnızca metin tutar; model dosyası güvenle paylaşılabilir.
+        pickle'ı bilerek kullanmadım: pickle dosyası açılırken içindeki kodu çalıştırabilir.
+        .npz yalnızca sayı dizisi, .json yalnızca metin tutar; model dosyasını güvenle
+        paylaşabiliyorum.
         """
         path.parent.mkdir(parents=True, exist_ok=True)
         arrays: dict[str, Any] = {"weights": self.weights, "bias": self.bias}
@@ -261,7 +265,7 @@ class TopicModel:
             raise ModelFileError(f"Model dosyası bulunamadı: {npz_path}")
         try:
             config = json.loads(json_path.read_text(encoding="utf-8"))
-            # allow_pickle=False: dosyada nesne (kod) varsa okunmaz, hata verilir.
+            # allow_pickle=False: dosyada nesne (kod) varsa okumuyor, hata veriyorum.
             with np.load(npz_path, allow_pickle=False) as arrays:
                 data = {key: arrays[key] for key in arrays.files}
         except (OSError, ValueError, json.JSONDecodeError) as exc:
@@ -269,7 +273,7 @@ class TopicModel:
         if config.get("format_version") != FORMAT_VERSION:
             raise ModelFileError("Model dosyası bu sürümle uyumsuz; yeniden eğitin.")
 
-        # Vektörleştirici aynı ayarlarla kurulur, sözlüğü ve IDF'i dosyadan doldurulur.
+        # Vektörleştiriciyi aynı ayarlarla kuruyor, sözlüğünü ve IDF'ini dosyadan dolduruyorum.
         vectorizer = build_vectorizer()
         for i, (target, state) in enumerate(zip(vectorizer.vectorizers, config["vectorizers"],
                                                 strict=True)):

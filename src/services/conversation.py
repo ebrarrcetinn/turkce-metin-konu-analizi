@@ -1,9 +1,10 @@
 """
 Dosya   : src/services/conversation.py
 Konu    : Sohbet Konusu Takibi
-Açıklama: Her mesajın konu olasılıklarını azalan ağırlıkla (eski * decay + yeni) biriktirerek
-          sohbetin genel konusunu bulur ve "bilimsel kitaplar", "biyoloji hakkında
-          bilimsel kitaplar" gibi doğal bir tema ifadesi üretir.
+Açıklama: Bu dosyada amacım her mesajın konu olasılıklarını azalan ağırlıkla
+          (eski * decay + yeni) biriktirerek sohbetin genel konusunu bulmak ve
+          "bilimsel kitaplar", "biyoloji hakkında bilimsel kitaplar" gibi doğal bir tema
+          ifadesi üretmek.
 Yazar   : Ebrar Cemre Çetin
 Tarih   : 26.09.2026
 """
@@ -15,27 +16,27 @@ from dataclasses import dataclass, field
 
 from src.config import DECAY, OTHER_LABEL, TOPIC_MIN_SHARE, UNCERTAIN_LABEL
 
-MAX_THEME_TOPICS = 3  # sohbet konusu en fazla 3 genel konunun birleşimi olabilir
-# Sohbet tek konudaysa ve bir alt konu o konunun en az yarısını oluşturuyorsa tema alt konuya
-# daraltılır ("Teknoloji" yerine "kuantum bilgisayarlar").
+MAX_THEME_TOPICS = 3  # sohbet konusunu en fazla 3 genel konunun birleşimiyle sınırladım
+# Sohbet tek konudaysa ve bir alt konu o konunun en az yarısını oluşturuyorsa temayı alt
+# konuya daraltıyorum ("Teknoloji" yerine "kuantum bilgisayarlar").
 SUBTOPIC_FOCUS_SHARE = 0.5
 
 
 @dataclass(frozen=True)
 class TopicForm:
-    """Bir genel konunun tema cümlesinde kullanılan Türkçe biçimleri ve rolü.
+    """Amacım bir genel konunun tema cümlesinde kullandığım Türkçe biçimlerini ve rolünü tutmak.
 
     Roller:
       medium    : içeriğin türü (Kitaplar). Cümlenin başı olur: "... kitaplar"
       qualifier : niteleyici (Bilim). Sıfat olarak başa gelir: "bilimsel kitaplar"
       domain    : alan konusu (Biyoloji, Fizik ...). "biyoloji hakkında ...", "tarih kitapları"
-    Ödevdeki "bilimsel kitaplar" ve "biyoloji hakkında bilimsel kitaplar" örnekleri bu rollerle
-    kurulur; aynı kurallar diğer konu birleşimleri için de geçerlidir.
+    Ödevdeki "bilimsel kitaplar" ve "biyoloji hakkında bilimsel kitaplar" örneklerini bu
+    rollerle kuruyorum; aynı kuralları diğer konu birleşimleri için de uyguluyorum.
     """
 
     role: str        # "medium" | "qualifier" | "domain"
     noun: str        # yalın ad ("biyoloji", "kitaplar")
-    compound: str    # ortamla birleşik ad kurarken kullanılan biçim ("tarih")
+    compound: str    # ortamla birleşik ad kurarken kullandığım biçim ("tarih")
     adjective: str   # sıfat biçimi ("bilimsel")
 
 
@@ -76,10 +77,10 @@ class Theme:
 
 
 def compose_phrase(topics: list[str]) -> str:
-    """Konu listesini (önem sırasıyla) doğal bir Türkçe tema ifadesine çevirir."""
+    """Amacım konu listesini (önem sırasıyla) doğal bir Türkçe tema ifadesine çevirmek."""
     if not topics:
         return ""
-    # Konular rollerine göre üç gruba ayrılır.
+    # Konuları rollerine göre üç gruba ayırıyorum.
     forms = {t: TOPIC_FORMS[t] for t in topics if t in TOPIC_FORMS}
     medium = next((t for t in topics if forms.get(t) and forms[t].role == "medium"), None)
     qualifiers = [t for t in topics if forms.get(t) and forms[t].role == "qualifier"]
@@ -108,13 +109,14 @@ def compose_phrase(topics: list[str]) -> str:
 
 @dataclass
 class ConversationTracker:
-    """Sohbet boyunca her genel konunun birikmiş skorunu tutar.
+    """Amacım sohbet boyunca her genel konunun birikmiş skorunu tutmak.
 
-    Her mesajda: yeni_skor = eski_skor · decay + mesajdaki olasılık. decay 0,7 olduğundan
-    son mesaj en etkili, bir önceki 0,7, ondan önceki 0,49 ağırlıkla katkı verir. Böylece
-    sohbet konusu yeni mesajlarla yavaşça değişir ama önceki konular hemen kaybolmaz.
-    Skorlar kesin karar değil olasılıklardır: model bir mesajda "Belirsiz" dese bile o
-    mesajın olasılıkları sohbet konusuna katkı verir.
+    Her mesajda şunu hesaplıyorum: yeni_skor = eski_skor · decay + mesajdaki olasılık.
+    decay 0,7 olduğundan son mesaj en etkili, bir önceki 0,7, ondan önceki 0,49 ağırlıkla
+    katkı verir. Böylece sohbet konusu yeni mesajlarla yavaşça değişir ama önceki konular
+    hemen kaybolmaz.
+    Skorları kesin karar olarak değil, olasılık olarak tutuyorum: model bir mesajda
+    "Belirsiz" dese bile o mesajın olasılıkları sohbet konusuna katkı veriyor.
     """
 
     decay: float = DECAY
@@ -137,16 +139,16 @@ class ConversationTracker:
 
     def update(self, general_scores: dict[str, float],
                joint_subtopic_scores: dict[str, dict[str, float]] | None = None) -> None:
-        """Bir mesajın olasılıklarıyla skorları günceller (boş mesajlar çağrılmamalı)."""
-        # Önce eski skorlar azaltılır ...
+        """Bir mesajın olasılıklarıyla skorları güncelliyorum (boş mesajlarda çağırmıyorum)."""
+        # Önce eski skorları azaltıyorum ...
         for topic in list(self.scores):
             self.scores[topic] *= self.decay
         for subs in self.sub_scores.values():
             for sub in subs:
                 subs[sub] *= self.decay
         self.other_score *= self.decay
-        # ... sonra yeni mesajın olasılıkları eklenir. "Diğer" ayrı tutulur; konu değil,
-        # "taksonomi dışı konuşuluyor" bilgisidir.
+        # ... sonra yeni mesajın olasılıklarını ekliyorum. "Diğer"i ayrı tutuyorum; o bir konu
+        # değil, "taksonomi dışı konuşuluyor" bilgisi.
         for topic, p in general_scores.items():
             if topic == OTHER_LABEL:
                 self.other_score += p
@@ -159,12 +161,12 @@ class ConversationTracker:
 
     def theme(self) -> Theme:
         total = sum(self.scores.values())
-        # Sohbet ağırlıklı olarak taksonomi dışıysa konu iddia edilmez (arama da yapılmaz).
+        # Sohbet ağırlıklı olarak taksonomi dışıysa konu iddia etmiyorum (arama da yapmıyorum).
         if self.turns == 0 or total <= 0 or self.other_score > total:
             return Theme(topics=[], phrase="", uncertain=True)
         shares = sorted(((t, s / total) for t, s in self.scores.items()),
                         key=lambda kv: kv[1], reverse=True)
-        # Toplam içindeki payı eşiği (%15) aşan konular sohbet konusuna katılır.
+        # Toplam içindeki payı eşiği (%15) aşan konuları sohbet konusuna katıyorum.
         chosen = [(t, s) for t, s in shares if s >= self.min_share][:MAX_THEME_TOPICS]
         if not chosen:
             chosen = shares[:1]
@@ -180,6 +182,6 @@ class ConversationTracker:
         return Theme(topics=chosen, phrase=phrase, focus_subtopic=focus)
 
     def snapshot(self) -> dict:
-        """Hata ayıklama logu için anlık skorlar."""
+        """Hata ayıklama logu için anlık skorları döndürüyorum."""
         return {"scores": {k: round(v, 4) for k, v in self.scores.items()},
                 "other_score": round(self.other_score, 4), "turns": self.turns}

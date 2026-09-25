@@ -1,8 +1,8 @@
 """
 Dosya   : src/ml/calibration.py
 Konu    : Güven Skoru Kalibrasyonu
-Açıklama: Temperature scaling yöntemiyle model olasılıklarını gerçek doğruluğa yaklaştırır;
-          en iyi sıcaklık altın oran aramasıyla bulunur.
+Açıklama: Bu dosyada amacım temperature scaling yöntemiyle model olasılıklarını gerçek
+          doğruluğa yaklaştırmak; en iyi sıcaklığı altın oran aramasıyla buluyorum.
 Yazar   : Ebrar Cemre Çetin
 Tarih   : 24.09.2026
 """
@@ -17,42 +17,44 @@ from src.ml.softmax_regression import softmax
 
 
 def negative_log_likelihood(logits: np.ndarray, targets: np.ndarray, temperature: float) -> float:
-    """Doğru sınıfa verilen olasılığın ortalama -log değeri (küçük = daha iyi kalibrasyon)."""
+    """Doğru sınıfa verilen olasılığın ortalama -log değerini hesaplıyorum
+    (küçük = daha iyi kalibrasyon)."""
     probabilities = softmax(logits / temperature)
-    # 1e-12: olasılık 0 olursa log(0) = -sonsuz hatasını önler.
+    # 1e-12 ekleyerek olasılık 0 olduğunda log(0) = -sonsuz hatasını önlüyorum.
     return float(-np.log(probabilities[np.arange(len(targets)), targets] + 1e-12).mean())
 
 
 def fit_temperature(logits: np.ndarray, targets: np.ndarray, low: float = 0.05,
                     high: float = 10.0, iterations: int = 60) -> float:
-    """Doğrulama verisinde negatif log-olabilirliği en küçükleyen sıcaklığı (T) bulur.
+    """Amacım doğrulama verisinde negatif log-olabilirliği en küçükleyen sıcaklığı (T) bulmak.
 
-    Temperature scaling (Guo vd., 2017): logitler T'ye bölünür. T > 1 olasılıkları
+    Temperature scaling (Guo vd., 2017): logitleri T'ye bölüyorum. T > 1 olasılıkları
     yumuşatır (model aşırı eminse), T < 1 keskinleştirir (model fazla çekingense). Sınıf
     sıralaması değişmez, yani doğruluk aynı kalır; yalnızca "%80 eminim" dediğinde gerçekten
-    yaklaşık %80 doğru olacak şekilde güven skorları düzeltilir. Bu, güven eşiğinin
-    ("Belirsiz" kararı) anlamlı çalışması için gereklidir.
+    yaklaşık %80 doğru olacak şekilde güven skorlarını düzeltiyorum. Bu, güven eşiğinin
+    ("Belirsiz" kararı) anlamlı çalışması için gerekli.
 
-    NLL, T'ye göre tek tepeli bir fonksiyon olduğundan altın oran araması ile en küçük
-    noktası türev almadan bulunur: her adımda aralık 0,618 oranında daraltılır.
+    NLL, T'ye göre tek tepeli bir fonksiyon olduğundan en küçük noktasını altın oran
+    aramasıyla türev almadan buluyorum: her adımda aralığı 0,618 oranında daraltıyorum.
     """
     ratio = (math.sqrt(5) - 1) / 2  # altın oran ≈ 0,618
-    # Arama log(T) üzerinde yapılır: 0,05-1 ve 1-10 aralıkları eşit önem kazanır.
+    # Aramayı log(T) üzerinde yapıyorum: 0,05-1 ve 1-10 aralıkları eşit önem kazanıyor.
     a, b = math.log(low), math.log(high)
-    # [a, b] aralığında iki iç nokta; hangisinde kayıp küçükse en küçük nokta o taraftadır.
+    # [a, b] aralığında iki iç nokta alıyorum; hangisinde kayıp küçükse en küçük nokta o
+    # taraftadır.
     c, d = b - ratio * (b - a), a + ratio * (b - a)
     f_c = negative_log_likelihood(logits, targets, math.exp(c))
     f_d = negative_log_likelihood(logits, targets, math.exp(d))
     for _ in range(iterations):
         if f_c < f_d:
-            # En küçük nokta [a, d] içinde: sağ uç d'ye çekilir, eski c yeni d olur.
+            # En küçük nokta [a, d] içinde: sağ ucu d'ye çekiyorum, eski c yeni d oluyor.
             b, d, f_d = d, c, f_c
             c = b - ratio * (b - a)
             f_c = negative_log_likelihood(logits, targets, math.exp(c))
         else:
-            # En küçük nokta [c, b] içinde: sol uç c'ye çekilir, eski d yeni c olur.
+            # En küçük nokta [c, b] içinde: sol ucu c'ye çekiyorum, eski d yeni c oluyor.
             a, c, f_c = c, d, f_d
             d = a + ratio * (b - a)
             f_d = negative_log_likelihood(logits, targets, math.exp(d))
-    # 60 adımda aralık çok küçülür; orta nokta sonuç olarak alınır.
+    # 60 adımda aralık çok küçülüyor; sonuç olarak orta noktayı alıyorum.
     return math.exp((a + b) / 2)

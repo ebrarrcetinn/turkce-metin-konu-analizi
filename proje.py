@@ -1,10 +1,10 @@
 """
 Dosya   : proje.py
 Konu    : Türkçe Metin Konu Analizi - Konsol Uygulaması (tek giriş noktası)
-Açıklama: Kullanıcıdan döngü içinde metin alır; metnin genel konusunu ve alt konularını,
-          sohbetin genel konusunu, üretilen arama sorgusunu ve internet sonuçlarını
-          konsola yazar, hepsini SQLite veritabanına kaydeder. Model dosyası yoksa veriyi
-          indirip modeli kendisi eğitir.
+Açıklama: Bu dosyada amacım kullanıcıdan döngü içinde metin alıp metnin genel konusunu ve
+          alt konularını, sohbetin genel konusunu, ürettiğim arama sorgusunu ve internet
+          sonuçlarını konsola yazmak, hepsini de SQLite veritabanına kaydetmek. Model dosyası
+          yoksa program veriyi indirip modeli kendisi eğitiyor.
 Yazar   : Ebrar Cemre Çetin
 Tarih   : 27.09.2026
 
@@ -39,7 +39,8 @@ from src.services.web_search import STATUS_OFFLINE as SEARCH_OFFLINE
 from src.services.web_search import STATUS_OK as SEARCH_OK
 from src.services.web_search import SearchOutcome
 
-# Konsol komutları; Türkçe karakter yazılamayan klavyeler için ASCII karşılıkları da kabul edilir.
+# Konsol komutları; Türkçe karakter yazılamayan klavyeler için ASCII karşılıklarını da
+# kabul ediyorum.
 EXIT_COMMANDS = {"çıkış", "cikis", "q", "quit", "exit"}
 HISTORY_COMMANDS = {"geçmiş", "gecmis"}
 RESET_COMMANDS = {"sıfırla", "sifirla"}
@@ -54,10 +55,10 @@ def pct(value: float) -> str:
 
 
 class ModelPreparer:
-    """Model yoksa (veya istenirse) veriyi indirir, veri setini kurar ve modeli eğitir.
+    """Amacım model yoksa (veya istenirse) veriyi indirmek, veri setini kurmak ve modeli eğitmek.
 
-    Böylece proje tek komutla (python proje.py) sıfırdan çalışır; model dosyası repoda
-    tutulmaz (30 MB), ilk çalıştırmada kullanıcının bilgisayarında eğitilir.
+    Böylece proje tek komutla (python proje.py) sıfırdan çalışıyor; model dosyasını repoda
+    tutmadım (30 MB), ilk çalıştırmada kullanıcının bilgisayarında eğitiliyor.
     """
 
     def __init__(self, model_path: Path = MODEL_PATH, processed_dir: Path = PROCESSED_DIR,
@@ -71,17 +72,17 @@ class ModelPreparer:
             self.model_path.with_suffix(".json").exists()
 
     def prepare(self, force: bool = False) -> TopicModel:
-        # Kayıtlı model varsa doğrudan yüklenir (saniyeden kısa sürer).
+        # Kayıtlı model varsa doğrudan yüklüyorum (saniyeden kısa sürer).
         if self.model_exists() and not force:
             return TopicModel.load(self.model_path)
-        # Hazırlanmış veri yoksa: GitHub'dan indir + SHA-256 doğrula -> temizle ve böl.
+        # Hazırlanmış veri yoksa: GitHub'dan indirip SHA-256 doğruluyorum -> temizleyip bölüyorum.
         if not (self.processed_dir / "train.jsonl").exists() or force:
             print("Veri indiriliyor ve doğrulanıyor (ilk çalıştırmada birkaç dakika "
                   "sürebilir)...", file=self.out)
             fetch_all()
             print("Veri seti hazırlanıyor...", file=self.out)
             DatasetBuilder(out_dir=self.processed_dir).build()
-        # Naive Bayes ve softmax regresyon eğitilip karşılaştırılır, iyi olan kaydedilir.
+        # Naive Bayes ve softmax regresyonu eğitip karşılaştırıyorum, iyi olanı kaydediyorum.
         print("Model eğitiliyor (yaklaşık 1 dakika)...", file=self.out)
         trainer = Trainer(processed_dir=self.processed_dir, model_path=self.model_path)
         model = trainer.run()
@@ -95,10 +96,11 @@ class ModelPreparer:
 
 
 class ConsoleApp:
-    """Konsol döngüsü: girdi okur, servisi çağırır, sonucu biçimlendirerek yazar.
+    """Burada amacım konsol döngüsünü yönetmek: girdi okuyorum, servisi çağırıyorum, sonucu
+    biçimlendirerek yazıyorum.
 
-    Uygulama mantığı ChatService'tedir; bu sınıf yalnızca giriş/çıkıştan sorumludur. Girdi ve
-    çıktı akışları parametre olduğu için testlerde klavye yerine metin verilebilir.
+    Uygulama mantığını ChatService'e koydum; bu sınıf yalnızca giriş/çıkıştan sorumlu. Girdi
+    ve çıktı akışlarını parametre yaptığım için testlerde klavye yerine metin verebiliyorum.
     """
 
     def __init__(self, service: ChatService, stdin: TextIO = sys.stdin,
@@ -111,14 +113,14 @@ class ConsoleApp:
         print(text, file=self.out)
 
     def render_turn(self, result: TurnResult) -> None:
-        """Bir mesajın sonucunu üç bölüm halinde yazar: metin analizi, sohbet, internet."""
+        """Bir mesajın sonucunu üç bölüm halinde yazıyorum: metin analizi, sohbet, internet."""
         p = result.prediction
         self._print("\n[Metin Analizi]")
         for warning in result.warnings:
             self._print(f"Uyarı: {warning}")
         if p.status == STATUS_EMPTY:
             return
-        # Konu kesin değilse alt konu gösterilmez; kullanıcı yine en olası tahmini görür.
+        # Konu kesin değilse alt konuyu göstermiyorum; kullanıcı yine en olası tahmini görür.
         if p.status == STATUS_OUT_OF_SCOPE:
             self._print(f"Genel Konu: Taksonomi dışında olabilir ({pct(p.confidence)})")
         elif p.status == STATUS_UNCERTAIN:
@@ -179,7 +181,7 @@ class ConsoleApp:
                         f"sohbet: {item.theme_label}")
 
     def handle_command(self, command: str) -> bool:
-        """Girdi bir komutsa işler ve True döndürür; değilse metin olarak analiz edilir."""
+        """Girdi bir komutsa işleyip True döndürüyorum; değilse metin olarak analiz ediyorum."""
         if command in HISTORY_COMMANDS:
             self.render_history()
         elif command in RESET_COMMANDS:
@@ -205,7 +207,7 @@ class ConsoleApp:
                 self._print("\nGirdi sonu; çıkılıyor.")
                 break
             text = line.strip()
-            command = text.casefold()  # "Q", "ÇIKIŞ" gibi büyük harfli komutlar da tanınır
+            command = text.casefold()  # "Q", "ÇIKIŞ" gibi büyük harfli komutları da tanıyorum
             if command in EXIT_COMMANDS:
                 self._print("Güle güle!")
                 break
@@ -214,7 +216,8 @@ class ConsoleApp:
             if not text:
                 self._print("Boş girdi; lütfen bir metin yazın.")
                 continue
-            # Ctrl+C uzun süren bir işlemi (ör. yavaş internet) iptal eder, programı kapatmaz.
+            # Ctrl+C ile uzun süren bir işlemi (ör. yavaş internet) iptal ediyorum,
+            # programı kapatmıyorum.
             try:
                 self.render_turn(self.service.process(text))
             except KeyboardInterrupt:
@@ -224,7 +227,7 @@ class ConsoleApp:
 
 
 def print_evaluation(report: dict) -> None:
-    """--degerlendir çıktısının kısa özeti; tamamı JSON rapordadır."""
+    """--degerlendir çıktısının kısa özetini yazıyorum; tamamı JSON rapordadır."""
     test = report["test"]["thresholded"]
     print(f"Test: doğruluk {test['accuracy']:.3f}, macro F1 {test['macro_f1']:.3f}")
     print(f"Görülmemiş konu (OOD) reddetme oranı: {report['ood_unseen']['rejected_rate']:.3f}")
@@ -237,8 +240,9 @@ def print_evaluation(report: dict) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Programın akışı: argümanlar -> model hazırlığı -> (değerlendirme veya) sohbet döngüsü.
-    Dönüş değeri çıkış kodudur: 0 başarılı, 2 model hazırlanamadı."""
+    """Burada amacım programın akışını yönetmek: argümanlar -> model hazırlığı ->
+    (değerlendirme veya) sohbet döngüsü. Dönüş değeri çıkış kodudur: 0 başarılı, 2 model
+    hazırlanamadı."""
     parser = argparse.ArgumentParser(description="Türkçe Metin Konu Analizi")
     parser.add_argument("--egit", action="store_true",
                         help="Veriyi yeniden indirip modeli baştan eğit")
@@ -249,11 +253,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--db", type=Path, default=DB_PATH, help="SQLite dosya yolu")
     parser.add_argument("--model", type=Path, default=MODEL_PATH, help="Model dosya yolu")
     args = parser.parse_args(argv)
-    # Konsolda yalnızca hatalar; ayrıntılar logs/app.log dosyasında (--debug ile konsolda).
+    # Konsolda yalnızca hataları gösteriyorum; ayrıntıları logs/app.log dosyasına yazıyorum
+    # (--debug ile konsolda).
     setup_logging("DEBUG" if args.debug else "ERROR", to_file=True)
 
     print("Türkçe Metin Konu Analizi")
-    # 1) Model: yoksa veri indirilir ve eğitilir, varsa yüklenir.
+    # 1) Model: yoksa veriyi indirip eğitiyorum, varsa yüklüyorum.
     try:
         model = ModelPreparer(args.model).prepare(force=args.egit)
     except (ModelFileError, DatasetError, DataAcquisitionError) as exc:
@@ -262,12 +267,12 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     print(f"Model hazır (v{model.version}).")
 
-    # 2) İstenirse test setlerinde ölçüm yapılıp çıkılır.
+    # 2) İstenirse test setlerinde ölçüm yapıp çıkıyorum.
     if args.degerlendir:
         print_evaluation(Evaluator(model).run())
         return 0
 
-    # 3) Veritabanı açılamazsa (ör. yazma izni yok) program kayıtsız devam eder.
+    # 3) Veritabanı açılamazsa (ör. yazma izni yok) programı kayıtsız devam ettiriyorum.
     try:
         db: Database | None = Database(args.db)
     except DatabaseError as exc:
@@ -276,7 +281,7 @@ def main(argv: list[str] | None = None) -> int:
     web = WEB_SEARCH_ENABLED and not args.no_web
     if not web:
         print("Web araması kapalı (çevrimdışı mod).")
-    # 4) Sohbet döngüsü; program nasıl biterse bitsin veritabanı bağlantısı kapatılır.
+    # 4) Sohbet döngüsü; program nasıl biterse bitsin veritabanı bağlantısını kapatıyorum.
     service = ChatService(model, db, web_enabled=web)
     try:
         return ConsoleApp(service).run()
@@ -287,7 +292,7 @@ def main(argv: list[str] | None = None) -> int:
 
 def entrypoint() -> int:
     # Windows'ta çıktı boruya yönlendirildiğinde yerel kod sayfası Türkçe karakterleri
-    # kodlayamazsa çökmek yerine yer tutucu yazılır.
+    # kodlayamazsa çökmek yerine yer tutucu yazdırıyorum.
     for stream in (sys.stdout, sys.stderr):
         reconfigure = getattr(stream, "reconfigure", None)
         if reconfigure is not None:
@@ -295,7 +300,7 @@ def entrypoint() -> int:
     try:
         return main()
     except KeyboardInterrupt:
-        # Model eğitilirken Ctrl+C basılırsa hata dökümü yerine kısa mesaj gösterilir.
+        # Model eğitilirken Ctrl+C basılırsa hata dökümü yerine kısa mesaj gösteriyorum.
         print("\nİptal edildi.", file=sys.stderr)
         return 130  # Ctrl+C ile sonlanan programların standart çıkış kodu
 

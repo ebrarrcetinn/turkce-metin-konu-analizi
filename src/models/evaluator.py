@@ -1,9 +1,9 @@
 """
 Dosya   : src/models/evaluator.py
 Konu    : Model Değerlendirme
-Açıklama: Modeli test, görülmemiş konu (OOD) ve harici setlerde ölçer; ödevdeki sohbet
-          senaryolarını çalıştırır ve sonuçları reports/degerlendirme_raporu.json
-          dosyasına yazar.
+Açıklama: Bu dosyada amacım modeli test, görülmemiş konu (OOD) ve harici setlerde ölçmek;
+          ödevdeki sohbet senaryolarını çalıştırmak ve sonuçları
+          reports/degerlendirme_raporu.json dosyasına yazmak.
 Yazar   : Ebrar Cemre Çetin
 Tarih   : 25.09.2026
 """
@@ -26,9 +26,9 @@ from src.services.app import ChatService
 
 LABELS = list(ALL_GENERAL_LABELS)
 
-# Ödevdeki örnek sohbetler. Kodda bu cümlelere özel hiçbir kural yoktur; burada yalnızca
-# sistemin genel davranışını ödevdeki beklentiyle karşılaştırmak için kullanılırlar.
-# Beklenen tema ifadeleri ödev metnindeki ifadelerdir.
+# Ödevdeki örnek sohbetler. Kodda bu cümlelere özel hiçbir kural yazmadım; bunları burada
+# yalnızca sistemin genel davranışını ödevdeki beklentiyle karşılaştırmak için kullanıyorum.
+# Beklenen tema ifadelerini ödev metnindeki ifadelerden aldım.
 CONVERSATION_SCENARIOS: list[dict] = [
     {"name": "Senaryo 1: kitaplar → bilim → biyoloji",
      "messages": ["Kitaplar hakkında konuşalım.", "Bilim ile ilgili neler var?",
@@ -42,8 +42,8 @@ CONVERSATION_SCENARIOS: list[dict] = [
      "expected_subtopics": ["Kuantum Bilgisayarlar", "Kuantum Mekaniği"]},
 ]
 
-# Eğitim verisinde bulunmayan, elle yazılmış cümleler. (metin, beklenen genel konu,
-# beklenen alt konu; None ise alt konu denetlenmez)
+# Eğitim verisinde bulunmayan, elle yazdığım cümleler. (metin, beklenen genel konu,
+# beklenen alt konu; None ise alt konuyu denetlemiyorum)
 SENTENCE_TESTS = [
     ("Kuantum dolanıklıkta parçacıkların dalga fonksiyonları birlikte değişebilir.",
      "Fizik", "Kuantum Mekaniği"),
@@ -56,7 +56,7 @@ SENTENCE_TESTS = [
 
 
 class Evaluator:
-    """Kaydedilmiş modeli eğitimde hiç kullanılmamış setlerde değerlendirir.
+    """Amacım kaydedilmiş modeli eğitimde hiç kullanılmamış setlerde değerlendirmek.
 
     test       : eğitimle aynı kaynaktan ama ortak terim içermeyen kartlar
     ood_unseen : eğitimde ve eşik seçiminde hiç görülmemiş konular
@@ -70,10 +70,10 @@ class Evaluator:
         self.reports_dir = reports_dir
 
     def _decisions(self, texts: list[str]) -> list[dict]:
-        """Toplu tahmin: her metin için argmax genel konu, eşikli karar ve alt konu.
+        """Toplu tahmin yapıyorum: her metin için argmax genel konu, eşikli karar ve alt konu.
 
-        Binlerce metin için tek tek `predict` çağırmak yerine olasılıklar tek matris
-        işlemiyle hesaplanır.
+        Binlerce metin için tek tek `predict` çağırmak yerine olasılıkları tek matris
+        işlemiyle hesaplıyorum.
         """
         rows = []
         probabilities = self.model.predict_proba(texts)
@@ -89,16 +89,16 @@ class Evaluator:
         return rows
 
     def test_split(self, records: list[Record]) -> dict:
-        """Genel konu metrikleri iki şekilde verilir: eşikli (uygulamanın gerçek davranışı,
-        "Belirsiz" yanlış sayılır) ve eşiksiz (yalnızca en olası konu)."""
+        """Genel konu metriklerini iki şekilde veriyorum: eşikli (uygulamanın gerçek
+        davranışı, "Belirsiz"i yanlış sayıyorum) ve eşiksiz (yalnızca en olası konu)."""
         rows = self._decisions([str(r["text"]) for r in records])
         y_true = [str(r["general"]) for r in records]
         thresholded = ClassificationReport(y_true, [r["label"] for r in rows], LABELS)
         argmax = ClassificationReport(y_true, [r["argmax"] for r in rows], LABELS)
-        # Kalibrasyon ölçümü için: her tahminin doğru olup olmadığı ve güveni
+        # Kalibrasyon ölçümü için her tahminin doğru olup olmadığını ve güvenini topluyorum
         correct = np.array([r["argmax"] == t for r, t in zip(rows, y_true, strict=True)])
         confidence = np.array([r["confidence"] for r in rows])
-        # Alt konu doğruluğu: genel konusu doğru bulunan ve alt konusu olan örneklerde.
+        # Alt konu doğruluğunu, genel konusu doğru bulunan ve alt konusu olan örneklerde ölçüyorum.
         pairs = [(r["subtopic"], rec["subtopic"]) for r, rec in zip(rows, records, strict=True)
                  if rec["subtopic"] and r["argmax"] == rec["general"]]
         return {
@@ -113,15 +113,15 @@ class Evaluator:
         }
 
     def short_inputs(self, records: list[Record]) -> dict:
-        """Yalnızca terim (1-3 sözcük) verildiğinde başarı; açıklama olmadan ne kadar
-        tanıyabildiğini gösterir (ör. yalnızca "kübit")."""
+        """Yalnızca terim (1-3 sözcük) verildiğinde başarıyı ölçüyorum; açıklama olmadan ne
+        kadar tanıyabildiğini görüyorum (ör. yalnızca "kübit")."""
         rows = self._decisions([str(r["term"]) for r in records])
         y_true = [str(r["general"]) for r in records]
         report = ClassificationReport(y_true, [r["argmax"] for r in rows], LABELS)
         return {"accuracy": round(report.accuracy, 4), "macro_f1": round(report.macro_f1, 4)}
 
     def ood(self, records: list[Record]) -> dict:
-        """Eğitimde hiç görülmemiş kategoriler: doğru davranış konu iddia etmemektir."""
+        """Eğitimde hiç görülmemiş kategorilerde ölçüyorum: doğru davranış konu iddia etmemektir."""
         rows = self._decisions([str(r["text"]) for r in records])
         status = Counter(r["status"] for r in rows)
         per_category: dict[str, list[bool]] = defaultdict(list)
@@ -135,8 +135,9 @@ class Evaluator:
                 "worst_categories_false_accept": {c: round(v, 3) for c, v in worst}}
 
     def external(self, records: list[Record]) -> dict:
-        """Farklı üsluptaki insan yazımı cümleler (biyoloji ders kitabı ve Osmanlı tarihi
-        paragrafları). Her kaynağın tek bir hedef konusu vardır; o konuyu bulma oranı ölçülür."""
+        """Farklı üsluptaki insan yazımı cümlelerde (biyoloji ders kitabı ve Osmanlı tarihi
+        paragrafları) ölçüm yapıyorum. Her kaynağın tek bir hedef konusu vardır; o konuyu
+        bulma oranını ölçüyorum."""
         out = {}
         for source in sorted({str(r["source"]) for r in records}):
             group = [r for r in records if r["source"] == source]
@@ -151,7 +152,7 @@ class Evaluator:
         return out
 
     def sentences(self) -> list[dict]:
-        """Elle yazılmış kabul cümlelerini tek tek dener."""
+        """Elle yazdığım kabul cümlelerini tek tek deniyorum."""
         results = []
         for text, general, subtopic in SENTENCE_TESTS:
             prediction = self.model.predict(text)
@@ -165,10 +166,11 @@ class Evaluator:
         return results
 
     def conversations(self) -> list[dict]:
-        """Ödevdeki sohbet senaryolarını web ve veritabanı olmadan çalıştırır."""
+        """Ödevdeki sohbet senaryolarını web ve veritabanı olmadan çalıştırıyorum."""
         results = []
         for scenario in CONVERSATION_SCENARIOS:
-            # Her senaryo yeni bir sohbet olarak başlar; önceki senaryonun konusu taşınmaz.
+            # Her senaryoyu yeni bir sohbet olarak başlatıyorum; önceki senaryonun konusunu
+            # taşımıyorum.
             service = ChatService(self.model, db=None, web_enabled=False)
             turns: list[dict] = []
             for message in scenario["messages"]:
@@ -188,7 +190,7 @@ class Evaluator:
         return results
 
     def latency(self, texts: list[str]) -> dict:
-        """Tek metin tahmin süresi (milisaniye), uygulamadaki gibi tek tek ölçülür."""
+        """Tek metin tahmin süresini (milisaniye), uygulamadaki gibi tek tek ölçüyorum."""
         timings = []
         for text in texts:
             start = time.perf_counter()

@@ -1,8 +1,9 @@
 """
 Dosya   : src/models/taxonomy.py
 Konu    : Konu Taksonomisi
-Açıklama: Genel konuları (Fizik, Kimya, Biyoloji, Teknoloji, Bilim, Kitaplar, Spor, Tarih) ve
-          alt konularını tanımlar; kaynak veri setindeki kategorileri bu taksonomiye eşler.
+Açıklama: Bu dosyada amacım genel konuları (Fizik, Kimya, Biyoloji, Teknoloji, Bilim,
+          Kitaplar, Spor, Tarih) ve alt konularını tanımlamak; kaynak veri setindeki
+          kategorileri bu taksonomiye eşliyorum.
 Yazar   : Ebrar Cemre Çetin
 Tarih   : 23.09.2026
 """
@@ -17,7 +18,7 @@ from src.config import OTHER_LABEL
 # Tabu veri setindeki kategori adı -> (genel konu, alt konu).
 # Kategori adları veri setindeki dosya adlarıdır (ör. data/genetik.json -> "genetik").
 # Ödevdeki konular (Fizik, Kimya, Biyoloji, Teknoloji, Bilim, Kitaplar, Spor, Tarih) için
-# veri setinde birebir karşılığı olan 41 kategori seçildi ve her biri bir alt konuya bağlandı.
+# veri setinde birebir karşılığı olan 41 kategoriyi seçtim ve her birini bir alt konuya bağladım.
 # Aynı alt konuya birden fazla kategori gidebilir (kuşlar ve deniz canlıları -> Zooloji).
 CATEGORY_TO_TAXONOMY: Final[dict[str, tuple[str, str]]] = {
     # Fizik
@@ -71,9 +72,9 @@ CATEGORY_TO_TAXONOMY: Final[dict[str, tuple[str, str]]] = {
     "epigrafi": ("Tarih", "Antik Çağ ve Arkeoloji"),
 }
 
-# Taksonomiyle anlamca örtüşen 31 kategori tamamen dışlanır. Örneğin "anatomi" biyolojiye,
-# "jeoloji" bilime yakındır; bunlar "Diğer" olarak eğitilseydi model biyoloji metinlerine
-# "Diğer" demeyi öğrenirdi, bir konuya atansalardı da o konuyu fazla genişletirlerdi.
+# Taksonomiyle anlamca örtüşen 31 kategoriyi tamamen dışladım. Örneğin "anatomi" biyolojiye,
+# "jeoloji" bilime yakın; bunları "Diğer" olarak eğitseydim model biyoloji metinlerine
+# "Diğer" demeyi öğrenirdi, bir konuya atasaydım da o konuyu fazla genişletirlerdi.
 EXCLUDED_CATEGORIES: Final[frozenset[str]] = frozenset(
     {
         "anatomi", "cerrahi", "dermatoloji", "farmakoloji", "immunoloji", "noroloji",
@@ -87,8 +88,8 @@ EXCLUDED_CATEGORIES: Final[frozenset[str]] = frozenset(
 
 # Veri setinde ayrı bir "kuantum bilgisayar" kategorisi yok; hepsi "kuantum" kategorisinde.
 # Ödevdeki Fizik / Teknoloji ayrımını öğretebilmek için bu kategorideki kartlardan terimi
-# kuantum hesaplamaya ait olanlar (kübit, kuantum kapısı, transmon ...) Teknoloji > Kuantum
-# Bilgisayarlar olarak etiketlenir; kalanlar Fizik > Kuantum Mekaniği olarak kalır.
+# kuantum hesaplamaya ait olanları (kübit, kuantum kapısı, transmon ...) Teknoloji > Kuantum
+# Bilgisayarlar olarak etiketliyorum; kalanları Fizik > Kuantum Mekaniği olarak bırakıyorum.
 QUANTUM_COMPUTING_TERM_RE = re.compile(
     r"kübit|qubit|kuantum (bilgisayar|işlemci|kapı|devre|algoritma|bellek|hata|hacmi|hızı|"
     r"üstünlüğü)|topolojik (kuantum )?bilgisayar|hadamard kapısı|cnot|pauli kapısı|"
@@ -97,7 +98,7 @@ QUANTUM_COMPUTING_TERM_RE = re.compile(
 )
 QUANTUM_COMPUTING = ("Teknoloji", "Kuantum Bilgisayarlar")
 
-# Ödevde istenen genel konular. Bunların dışındaki her şey OTHER_LABEL ("Diğer") olur.
+# Ödevde istenen genel konular. Bunların dışındaki her şeyi OTHER_LABEL ("Diğer") yapıyorum.
 GENERAL_TOPICS: Final[tuple[str, ...]] = (
     "Fizik", "Kimya", "Biyoloji", "Teknoloji", "Bilim", "Kitaplar", "Spor", "Tarih",
 )
@@ -105,24 +106,24 @@ ALL_GENERAL_LABELS: Final[tuple[str, ...]] = (*GENERAL_TOPICS, OTHER_LABEL)
 
 
 def map_card(category: str, term: str) -> tuple[str, str | None] | None:
-    """Kaynak kartı (kategori, terim) -> (genel konu, alt konu) eşler.
+    """Kaynak kartı (kategori, terim) -> (genel konu, alt konu) olarak eşliyorum.
 
-    Dönüş: ``None`` -> kart dışlanır; ``(OTHER_LABEL, None)`` -> taksonomi dışı örnek.
+    Dönüş: ``None`` -> kartı dışlıyorum; ``(OTHER_LABEL, None)`` -> taksonomi dışı örnek.
     """
     if category in EXCLUDED_CATEGORIES:
         return None
-    # Kuantum kontrolü genel eşlemeden önce yapılır, çünkü "kuantum" eşlemede Fizik'e gider.
+    # Kuantum kontrolünü genel eşlemeden önce yapıyorum, çünkü "kuantum" eşlemede Fizik'e gider.
     if category == "kuantum" and QUANTUM_COMPUTING_TERM_RE.search(term):
         return QUANTUM_COMPUTING
     if category in CATEGORY_TO_TAXONOMY:
         return CATEGORY_TO_TAXONOMY[category]
-    # Eşlenmemiş ve dışlanmamış her kategori (yemek, müzik, coğrafya ...) "Diğer" örneğidir;
-    # modele taksonomi dışı metinleri tanımayı öğretir.
+    # Eşlenmemiş ve dışlanmamış her kategoriyi (yemek, müzik, coğrafya ...) "Diğer" örneği
+    # sayıyorum; böylece modele taksonomi dışı metinleri tanımayı öğretiyorum.
     return (OTHER_LABEL, None)
 
 
 def subtopics_of(general: str) -> list[str]:
-    """Bir genel konunun alt konuları, eşleme tablosundan türetilir (tek bilgi kaynağı)."""
+    """Bir genel konunun alt konularını eşleme tablosundan türetiyorum (tek bilgi kaynağı)."""
     subs = {sub for gen, sub in CATEGORY_TO_TAXONOMY.values() if gen == general}
     if general == QUANTUM_COMPUTING[0]:
         subs.add(QUANTUM_COMPUTING[1])
@@ -130,5 +131,5 @@ def subtopics_of(general: str) -> list[str]:
 
 
 def validate_hierarchy(general: str, subtopic: str) -> bool:
-    """Alt konunun gerçekten o genel konuya ait olup olmadığını denetler."""
+    """Alt konunun gerçekten o genel konuya ait olup olmadığını denetliyorum."""
     return subtopic in subtopics_of(general)
