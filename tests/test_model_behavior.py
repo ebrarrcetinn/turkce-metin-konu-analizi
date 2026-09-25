@@ -1,7 +1,7 @@
 """
 Dosya   : tests/test_model_behavior.py
 Konu    : Eğitilmiş Model Davranış Testleri
-Açıklama: Kuantum ayrımı, ödevdeki örnek cümleler, tek sözcüklük konu adları ve uç durumlar
+Açıklama: Kuantum ayrımı, case'deki örnek cümleler, tek sözcüklük konu adları ve uç durumlar
           üzerinde eğitilmiş modelin davranışını test eder. Cümleler eğitim verisinde yoktur.
 Yazar   : Ebrar Cemre Çetin
 Tarih   : 27.09.2026
@@ -124,7 +124,7 @@ def test_confidence_bounds_and_latency(classifier):
     ("fizik", "Fizik"), ("kimya", "Kimya"), ("spor", "Spor"), ("tarih", "Tarih"),
 ])
 def test_single_topic_word(classifier, text, general):
-    """Ödev senaryosundaki gibi tek sözcüklük konu adları tanınmalı."""
+    """Case senaryosundaki gibi tek sözcüklük konu adları tanınmalı."""
     assert classifier.predict(text).general == general
 
 

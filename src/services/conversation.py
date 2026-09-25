@@ -30,7 +30,7 @@ class TopicForm:
       medium    : içeriğin türü (Kitaplar). Cümlenin başı olur: "... kitaplar"
       qualifier : niteleyici (Bilim). Sıfat olarak başa gelir: "bilimsel kitaplar"
       domain    : alan konusu (Biyoloji, Fizik ...). "biyoloji hakkında ...", "tarih kitapları"
-    Ödevdeki "bilimsel kitaplar" ve "biyoloji hakkında bilimsel kitaplar" örneklerini bu
+    Case'deki "bilimsel kitaplar" ve "biyoloji hakkında bilimsel kitaplar" örneklerini bu
     rollerle kuruyorum; aynı kuralları diğer konu birleşimleri için de uyguluyorum.
     """
 

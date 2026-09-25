@@ -11,7 +11,7 @@ kullanılmadan, yalnızca `numpy` / `scipy` (dizi ve seyrek matris yapıları) i
 
 Yazar: Ebrar Cemre Çetin
 
-## Ödev gereksinimleri ve karşılıkları
+## Case gereksinimleri ve karşılıkları
 
 | Gereksinim | Karşılığı |
 |---|---|
@@ -63,7 +63,7 @@ silinmez), `yardım`, `çıkış` / `q`.
 İsteğe bağlı ortam değişkenleri: `NLP_WEB_SEARCH=0`, `NLP_DB_PATH`, `NLP_MODEL_PATH`,
 `NLP_DECAY`, `NLP_WEB_TIMEOUT`, `NLP_LOG_LEVEL`.
 
-## Örnek çalışma (ödevdeki 1. senaryo, `--no-web`)
+## Örnek çalışma (case'deki 1. senaryo, `--no-web`)
 
 ```
 Metin girin:
@@ -175,7 +175,7 @@ Test seti bir kez, eğitim ve eşik seçimi bittikten sonra ölçüldü
 | Harici Osmanlı tarihi paragrafları (en olası konu = Tarih) | 0,420 |
 | Tahmin süresi (tek metin, medyan) | 0,7 ms |
 
-Ödev senaryoları ve el ile yazılmış 5 kabul cümlesinden 6/7'si geçer. Kalan durum ve diğer
+Case senaryoları ve el ile yazılmış 5 kabul cümlesinden 6/7'si geçer. Kalan durum ve diğer
 sınırlılıklar [docs/RAPOR.md](docs/RAPOR.md) içinde anlatılmıştır.
 
 ## Testler

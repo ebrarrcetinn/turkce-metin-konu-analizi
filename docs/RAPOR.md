@@ -8,7 +8,7 @@ Tarih: 27.09.2026
 Bu projede amacım, kullanıcının yazdığı Türkçe bir metnin genel konusunu ve alt konularını bulan,
 birden fazla mesajdan oluşan bir sohbetin genel konusunu takip eden, bu konu için internette
 arama yapan ve metinleri, konuları, sorguları ve arama sonuçlarını veritabanına kaydeden bir
-konsol uygulaması geliştirdim. Ödevde istendiği gibi sınıflandırma algoritmalarını hazır
+konsol uygulaması geliştirdim. Case'de istendiği gibi sınıflandırma algoritmalarını hazır
 makine öğrenmesi kütüphaneleri kullanmadan kendim yazdım; `numpy` ve `scipy`'yi yalnızca
 dizi ve seyrek matris yapısı olarak kullandım.
 
@@ -124,7 +124,7 @@ kategorisi):
 
 > **alel** — bir genin kromozomdaki lokusunda bulunan alternatif formlarından biri.
 
-Eğitim metni olarak "kavram + açıklama" birleşimini aldım ve kartın kategorisini ödevdeki
+Eğitim metni olarak "kavram + açıklama" birleşimini aldım ve kartın kategorisini case'deki
 konulara eşledim: "genetik" → Biyoloji > Genetik, "futbol" → Spor > Futbol, "osmanli" →
 Tarih > Osmanlı Tarihi gibi. Veriyi her seferinde aynı sürüm gelsin diye sabit bir commit
 adresinden indiriyor ve her dosyayı SHA-256 özetiyle doğruluyorum.
@@ -143,7 +143,7 @@ Veriyle ilgili aldığım kararlar:
 * **Belirsiz kategorileri çıkardım.** Örneğin "anatomi" biyolojiye, "jeoloji" bilime çok
   yakın. Bunları "Diğer" olarak eğitseydim model biyoloji metinlerine "Diğer" demeyi
   öğrenirdi; bu yüzden 31 kategoriyi tamamen dışarıda bıraktım.
-* **Kuantumu ikiye ayırdım.** Veri setinde yalnızca bir "kuantum" kategorisi var. Ödevdeki
+* **Kuantumu ikiye ayırdım.** Veri setinde yalnızca bir "kuantum" kategorisi var. Case'deki
   Fizik / Teknoloji ayrımını öğretebilmek için terimi kuantum hesaplamaya ait olan kartları
   (kübit, kuantum kapısı, transmon…) Teknoloji > Kuantum Bilgisayarlar olarak, kalanları
   Fizik > Kuantum Mekaniği olarak etiketledim. Örnek:
@@ -296,7 +296,7 @@ Her mesajdan sonra her genel konu için skoru şöyle güncelliyorum:
 
 Böylece son mesaj en etkili oluyor; bir önceki 0,7, ondan önceki 0,49 ağırlıkla katkı
 veriyor. Toplam içindeki payı %15'i geçen en fazla 3 konuyu sohbetin genel konusu olarak
-alıyorum. Ödevdeki 1. senaryoda
+alıyorum. Case'deki 1. senaryoda
 gerçek değerler şöyle:
 
 | Mesaj | Mesajın konusu | Sohbet skorları | Paylar | Tema |
@@ -311,7 +311,7 @@ Eşiği %15'e indirdim, çünkü 0,7 azalma katsayısıyla iki mesaj önce konu�
 üç konulu bir sohbette tam bu aralığa düşüyor.
 
 Tema cümlesini konuların rolüne göre kuruyorum. Kitaplar'ı içeriğin türü (cümlenin başı),
-Bilim'i niteleyici (sıfat), diğerlerini alan konusu olarak tanımladım. Bu kuralları ödevdeki
+Bilim'i niteleyici (sıfat), diğerlerini alan konusu olarak tanımladım. Bu kuralları case'deki
 örneklere özel yazmadım, her konu birleşimi için çalışıyorlar:
 
 * Kitaplar → "kitaplar"
@@ -396,7 +396,7 @@ Test setini yalnızca bir kez, bütün seçimleri bitirdikten sonra ölçtüm.
 Precision'ın recall'dan yüksek olması koyduğum eşiğin etkisi: model emin olmadığında yanlış
 konu söylemek yerine "Belirsiz" diyor.
 
-### 10.3 Ödev senaryoları ve kabul cümleleri
+### 10.3 Case senaryoları ve kabul cümleleri
 
 | Girdi | Sonuç |
 |---|---|
