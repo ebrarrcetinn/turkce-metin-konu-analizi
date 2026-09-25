@@ -14,7 +14,6 @@ Kullanım: python proje.py [--egit] [--degerlendir] [--no-web] [--debug] [--db Y
 from __future__ import annotations
 
 import argparse
-import logging
 import sys
 from pathlib import Path
 from typing import TextIO
@@ -40,8 +39,7 @@ from src.services.web_search import STATUS_OFFLINE as SEARCH_OFFLINE
 from src.services.web_search import STATUS_OK as SEARCH_OK
 from src.services.web_search import SearchOutcome
 
-logger = logging.getLogger("proje")
-
+# Konsol komutları; Türkçe karakter yazılamayan klavyeler için ASCII karşılıkları da kabul edilir.
 EXIT_COMMANDS = {"çıkış", "cikis", "q", "quit", "exit"}
 HISTORY_COMMANDS = {"geçmiş", "gecmis"}
 RESET_COMMANDS = {"sıfırla", "sifirla"}
@@ -51,11 +49,16 @@ HELP_TEXT = ("Komutlar: 'geçmiş' (bu oturumun mesajları), 'sıfırla' (yeni s
 
 
 def pct(value: float) -> str:
+    """0.792 -> "%79,2" (Türkçe yazımda yüzde işareti başta, ondalık ayırıcı virgül)."""
     return f"%{value * 100:.1f}".replace(".", ",")
 
 
 class ModelPreparer:
-    """Model yoksa (veya istenirse) veriyi indirir, veri setini kurar ve modeli eğitir."""
+    """Model yoksa (veya istenirse) veriyi indirir, veri setini kurar ve modeli eğitir.
+
+    Böylece proje tek komutla (python proje.py) sıfırdan çalışır; model dosyası repoda
+    tutulmaz (30 MB), ilk çalıştırmada kullanıcının bilgisayarında eğitilir.
+    """
 
     def __init__(self, model_path: Path = MODEL_PATH, processed_dir: Path = PROCESSED_DIR,
                  out: TextIO = sys.stdout):
@@ -68,14 +71,17 @@ class ModelPreparer:
             self.model_path.with_suffix(".json").exists()
 
     def prepare(self, force: bool = False) -> TopicModel:
+        # Kayıtlı model varsa doğrudan yüklenir (saniyeden kısa sürer).
         if self.model_exists() and not force:
             return TopicModel.load(self.model_path)
+        # Hazırlanmış veri yoksa: GitHub'dan indir + SHA-256 doğrula -> temizle ve böl.
         if not (self.processed_dir / "train.jsonl").exists() or force:
             print("Veri indiriliyor ve doğrulanıyor (ilk çalıştırmada birkaç dakika "
                   "sürebilir)...", file=self.out)
             fetch_all()
             print("Veri seti hazırlanıyor...", file=self.out)
             DatasetBuilder(out_dir=self.processed_dir).build()
+        # Naive Bayes ve softmax regresyon eğitilip karşılaştırılır, iyi olan kaydedilir.
         print("Model eğitiliyor (yaklaşık 1 dakika)...", file=self.out)
         trainer = Trainer(processed_dir=self.processed_dir, model_path=self.model_path)
         model = trainer.run()
@@ -89,7 +95,11 @@ class ModelPreparer:
 
 
 class ConsoleApp:
-    """Konsol döngüsü: girdi okur, servisi çağırır, sonucu biçimlendirerek yazar."""
+    """Konsol döngüsü: girdi okur, servisi çağırır, sonucu biçimlendirerek yazar.
+
+    Uygulama mantığı ChatService'tedir; bu sınıf yalnızca giriş/çıkıştan sorumludur. Girdi ve
+    çıktı akışları parametre olduğu için testlerde klavye yerine metin verilebilir.
+    """
 
     def __init__(self, service: ChatService, stdin: TextIO = sys.stdin,
                  out: TextIO = sys.stdout):
@@ -101,12 +111,14 @@ class ConsoleApp:
         print(text, file=self.out)
 
     def render_turn(self, result: TurnResult) -> None:
+        """Bir mesajın sonucunu üç bölüm halinde yazar: metin analizi, sohbet, internet."""
         p = result.prediction
         self._print("\n[Metin Analizi]")
         for warning in result.warnings:
             self._print(f"Uyarı: {warning}")
         if p.status == STATUS_EMPTY:
             return
+        # Konu kesin değilse alt konu gösterilmez; kullanıcı yine en olası tahmini görür.
         if p.status == STATUS_OUT_OF_SCOPE:
             self._print(f"Genel Konu: Taksonomi dışında olabilir ({pct(p.confidence)})")
         elif p.status == STATUS_UNCERTAIN:
@@ -167,7 +179,7 @@ class ConsoleApp:
                         f"sohbet: {item.theme_label}")
 
     def handle_command(self, command: str) -> bool:
-        """Komutsa işler ve True döndürür."""
+        """Girdi bir komutsa işler ve True döndürür; değilse metin olarak analiz edilir."""
         if command in HISTORY_COMMANDS:
             self.render_history()
         elif command in RESET_COMMANDS:
@@ -193,7 +205,7 @@ class ConsoleApp:
                 self._print("\nGirdi sonu; çıkılıyor.")
                 break
             text = line.strip()
-            command = text.casefold()
+            command = text.casefold()  # "Q", "ÇIKIŞ" gibi büyük harfli komutlar da tanınır
             if command in EXIT_COMMANDS:
                 self._print("Güle güle!")
                 break
@@ -202,6 +214,7 @@ class ConsoleApp:
             if not text:
                 self._print("Boş girdi; lütfen bir metin yazın.")
                 continue
+            # Ctrl+C uzun süren bir işlemi (ör. yavaş internet) iptal eder, programı kapatmaz.
             try:
                 self.render_turn(self.service.process(text))
             except KeyboardInterrupt:
@@ -211,6 +224,7 @@ class ConsoleApp:
 
 
 def print_evaluation(report: dict) -> None:
+    """--degerlendir çıktısının kısa özeti; tamamı JSON rapordadır."""
     test = report["test"]["thresholded"]
     print(f"Test: doğruluk {test['accuracy']:.3f}, macro F1 {test['macro_f1']:.3f}")
     print(f"Görülmemiş konu (OOD) reddetme oranı: {report['ood_unseen']['rejected_rate']:.3f}")
@@ -223,6 +237,8 @@ def print_evaluation(report: dict) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Programın akışı: argümanlar -> model hazırlığı -> (değerlendirme veya) sohbet döngüsü.
+    Dönüş değeri çıkış kodudur: 0 başarılı, 2 model hazırlanamadı."""
     parser = argparse.ArgumentParser(description="Türkçe Metin Konu Analizi")
     parser.add_argument("--egit", action="store_true",
                         help="Veriyi yeniden indirip modeli baştan eğit")
@@ -237,6 +253,7 @@ def main(argv: list[str] | None = None) -> int:
     setup_logging("DEBUG" if args.debug else "ERROR", to_file=True)
 
     print("Türkçe Metin Konu Analizi")
+    # 1) Model: yoksa veri indirilir ve eğitilir, varsa yüklenir.
     try:
         model = ModelPreparer(args.model).prepare(force=args.egit)
     except (ModelFileError, DatasetError, DataAcquisitionError) as exc:
@@ -245,10 +262,12 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     print(f"Model hazır (v{model.version}).")
 
+    # 2) İstenirse test setlerinde ölçüm yapılıp çıkılır.
     if args.degerlendir:
         print_evaluation(Evaluator(model).run())
         return 0
 
+    # 3) Veritabanı açılamazsa (ör. yazma izni yok) program kayıtsız devam eder.
     try:
         db: Database | None = Database(args.db)
     except DatabaseError as exc:
@@ -257,6 +276,7 @@ def main(argv: list[str] | None = None) -> int:
     web = WEB_SEARCH_ENABLED and not args.no_web
     if not web:
         print("Web araması kapalı (çevrimdışı mod).")
+    # 4) Sohbet döngüsü; program nasıl biterse bitsin veritabanı bağlantısı kapatılır.
     service = ChatService(model, db, web_enabled=web)
     try:
         return ConsoleApp(service).run()
@@ -275,8 +295,9 @@ def entrypoint() -> int:
     try:
         return main()
     except KeyboardInterrupt:
+        # Model eğitilirken Ctrl+C basılırsa hata dökümü yerine kısa mesaj gösterilir.
         print("\nİptal edildi.", file=sys.stderr)
-        return 130
+        return 130  # Ctrl+C ile sonlanan programların standart çıkış kodu
 
 
 if __name__ == "__main__":
