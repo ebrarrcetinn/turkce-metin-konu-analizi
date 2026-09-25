@@ -1,3 +1,12 @@
+"""
+Dosya   : tests/test_web_search.py
+Konu    : İnternet Araması Testleri
+Açıklama: Wikipedia/DuckDuckGo yanıt ayrıştırma, hata durumları, yeniden deneme ve URL
+          filtresini sahte HTTP yanıtlarıyla test eder.
+Yazar   : Ebrar Cemre Çetin
+Tarih   : 27.09.2026
+"""
+
 import pytest
 import requests
 

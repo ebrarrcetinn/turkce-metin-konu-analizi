@@ -1,4 +1,12 @@
-"""Merkezi yapılandırma. Tüm sabitler burada; bazıları ortam değişkenleriyle ezilebilir."""
+"""
+Dosya   : src/config.py
+Konu    : Proje Ayarları
+Açıklama: Yollar, veri bölme oranları, model hiperparametreleri, eşikler, sohbet takibi ve web
+          arama ayarları gibi tüm sabitleri tek yerde toplar. Bazı değerler ortam
+          değişkenleriyle değiştirilebilir.
+Yazar   : Ebrar Cemre Çetin
+Tarih   : 23.09.2026
+"""
 
 from __future__ import annotations
 
@@ -16,10 +24,9 @@ RAW_DIR = DATA_DIR / "raw"
 PROCESSED_DIR = DATA_DIR / "processed"
 MODELS_DIR = PROJECT_ROOT / "models"
 REPORTS_DIR = PROJECT_ROOT / "reports"
-FIGURES_DIR = REPORTS_DIR / "figures"
 
-MODEL_PATH = Path(os.environ.get("NLP_MODEL_PATH", MODELS_DIR / "topic_model.joblib"))
-MODEL_METADATA_PATH = MODEL_PATH.with_suffix(".json")
+# Model iki dosya olarak saklanır: ağırlıklar (.npz) ve sözlük/ayarlar (.json).
+MODEL_PATH = Path(os.environ.get("NLP_MODEL_PATH", MODELS_DIR / "topic_model"))
 DB_PATH = Path(os.environ.get("NLP_DB_PATH", PROJECT_ROOT / "nlp_app.db"))
 
 # --- Veri bölme (sınıf bazında stratified, terim bazında gruplu) ---
@@ -29,22 +36,24 @@ VAL_SIZE = 0.15
 UNSEEN_OOD_FRACTION = 0.35
 
 # --- Model ---
-FINAL_EXPERIMENT_ID = "E11"
-FINAL_C = 1.0
-MODEL_VERSION = "1.0.0"
+MODEL_VERSION = "2.0.0"
+NB_ALPHA = 0.001  # Naive Bayes Laplace düzeltmesi (200 bin özellikte küçük olmalı)
+SOFTMAX_LEARNING_RATE = 0.05
+SOFTMAX_L2 = 1e-6
+SOFTMAX_MAX_EPOCHS = 30
 
 # --- Çıkarım ---
 OTHER_LABEL = "Diğer"
 UNCERTAIN_LABEL = "Belirsiz"
-# Asıl eşikler eğitimde seçilip model metadata'sına yazılır; bunlar yalnızca varsayılan.
-DEFAULT_MIN_CONFIDENCE = 0.45
-DEFAULT_SUBTOPIC_THRESHOLD = 0.30
-THRESHOLD_GRID = tuple(round(0.20 + 0.05 * i, 2) for i in range(11))  # 0.20 ... 0.70
+# Güven eşiği eğitimde doğrulama verisiyle bu ızgaradan seçilir.
 CONFIDENCE_GRID = tuple(round(0.20 + 0.05 * i, 2) for i in range(15))  # 0.20 ... 0.90
 MAX_SUBTOPICS = 3
-# Bu kadar veya daha az içerik sözcüğü olan girdiler ayrı bir sıcaklıkla kalibre edilir.
-SHORT_INPUT_MAX_TOKENS = 3
+# İlk alt konudan sonrakiler, genel konu içindeki payı bu değeri aşarsa listelenir.
+SUBTOPIC_MIN_SCORE = 0.15
+# Ana konu dışında bu olasılığı aşan genel konular "ilişkili konu" olarak gösterilir.
+RELATED_TOPIC_MIN_SCORE = 0.20
 MAX_INPUT_CHARS = 5000
+
 
 def _env_float(name: str, default: float) -> float:
     """Geçersiz ortam değişkeninde çökme yerine varsayılan değer."""
@@ -56,7 +65,10 @@ def _env_float(name: str, default: float) -> float:
 
 # --- Sohbet takibi ---
 DECAY = _env_float("NLP_DECAY", 0.7)
-TOPIC_MIN_SHARE = 0.20  # birleşik sohbet konusuna katılmak için gereken minimum pay
+# Birleşik sohbet konusuna katılmak için gereken minimum pay. decay 0.7 ile iki mesaj
+# önce konuşulan bir konunun ağırlığı ~0.49'a iner; üç konulu sohbette payı 0.15-0.20
+# aralığına düştüğü için eşik 0.15 seçildi.
+TOPIC_MIN_SHARE = 0.15
 
 # --- Web arama ---
 WEB_TIMEOUT = _env_float("NLP_WEB_TIMEOUT", 6.0)

@@ -1,4 +1,11 @@
-"""Uygulama genelinde logging yapılandırması."""
+"""
+Dosya   : src/logging_setup.py
+Konu    : Loglama Ayarları
+Açıklama: Uygulama genelinde log biçimini ve seviyesini ayarlar; istenirse logları
+          logs/app.log dosyasına da yazar.
+Yazar   : Ebrar Cemre Çetin
+Tarih   : 23.09.2026
+"""
 
 from __future__ import annotations
 

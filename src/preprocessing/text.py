@@ -1,7 +1,11 @@
-"""Türkçe metin normalizasyonu ve tokenizasyonu.
-
-Python'un str.lower() fonksiyonu Türkçe I/İ harflerini yanlış çevirdiği için
-turkish_lower kullanılır. Aynı fonksiyonlar eğitimde ve çıkarımda ortaktır.
+"""
+Dosya   : src/preprocessing/text.py
+Konu    : Türkçe Metin Ön İşleme
+Açıklama: Türkçeye uygun küçük harfe çevirme (I/İ sorunu), normalizasyon, tokenizasyon,
+          stopword listesi ve F5 kökleme (sözcüğün ilk 5 harfi) işlemlerini yapar. Aynı
+          fonksiyonlar eğitimde ve tahminde ortak kullanılır.
+Yazar   : Ebrar Cemre Çetin
+Tarih   : 23.09.2026
 """
 
 from __future__ import annotations

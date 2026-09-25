@@ -1,4 +1,11 @@
-"""Ortak test yardımcıları."""
+"""
+Dosya   : tests/conftest.py
+Konu    : Ortak Test Yardımcıları
+Açıklama: Testlerde kullanılan model ve veritabanı fixture'larını, sahte HTTP yanıtlarını
+          ve örnek dosya okuyucuyu içerir.
+Yazar   : Ebrar Cemre Çetin
+Tarih   : 27.09.2026
+"""
 
 from __future__ import annotations
 
@@ -21,11 +28,11 @@ def load_fixture(name: str):
 @pytest.fixture(scope="session")
 def classifier():
     """Eğitilmiş model gerekir; yoksa model testleri açık bir nedenle atlanır."""
-    if not MODEL_PATH.exists():
-        pytest.skip("Model artifact yok: `python train.py` çalıştırın")
-    from src.models.predictor import TopicClassifier
+    if not MODEL_PATH.with_suffix(".npz").exists():
+        pytest.skip("Model dosyası yok: önce `python proje.py` çalıştırın")
+    from src.models.topic_model import TopicModel
 
-    return TopicClassifier.load()
+    return TopicModel.load()
 
 
 @pytest.fixture

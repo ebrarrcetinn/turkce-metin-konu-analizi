@@ -1,6 +1,10 @@
-"""Sohbet temasından arama sorgusu üretir.
-
-Sorgu, tema çekirdeğine son mesajdaki en ayırt edici sözcüklerin eklenmesiyle oluşur.
+"""
+Dosya   : src/services/query_builder.py
+Konu    : Arama Sorgusu Oluşturma
+Açıklama: Sohbet temasından ve mesajdaki ayırt edici sözcüklerden internet araması için
+          kısa bir sorgu üretir.
+Yazar   : Ebrar Cemre Çetin
+Tarih   : 26.09.2026
 """
 
 from __future__ import annotations
@@ -10,15 +14,17 @@ import re
 from src.preprocessing.text import f5_stem, normalize
 from src.services.conversation import Theme
 
-FILLER_WORDS = frozenset({"hakkında", "alanında", "ve"})
+FILLER_WORDS = frozenset({"alanında", "ve"})
 MAX_QUERY_KEYWORDS = 2
-LONG_CORE_WORDS = 3  # uzun çekirdeğe yalnızca bir anahtar sözcük eklenir
+LONG_CORE_WORDS = 3  # bu uzunluktaki tema ifadesi zaten belirgin; sözcük eklenmez
 MAX_QUERY_CHARS = 100
 MIN_STEM_CHARS = 4
 
-# Çekimli fiil sonları; bu sözcükler sorguya eklenmez.
+# Çekimli fiil sonları; bu sözcükler sorguya eklenmez. Geçmiş zaman eki ünsüz uyumuna
+# göre yalnızca sert ünsüzden (ç f h k p s ş t) sonra "-tı" olur; böylece "kuantum"
+# gibi isimler fiil sanılmaz.
 FINITE_VERB_RE = re.compile(
-    r"(?:[ıiuü]yor(?:um|sun|uz|lar)?|[dt][ıiuü](?:m|n|k|nız|niz|lar|ler)?|"
+    r"(?:[ıiuü]yor(?:um|sun|uz|lar)?|(?:d|(?<=[çfhkpsşt])t)[ıiuü](?:m|n|k|nız|niz|lar|ler)?|"
     r"[mn][ıiuü]ş(?:[ıiuü]m|lar|ler)?|[ae]c[ae]k(?:[ıi]m|lar|ler)?)$"
 )
 # Sorgu için kırpılan yaygın hal ekleri (araç, bulunma, ayrılma)
@@ -41,17 +47,17 @@ def build_query(theme: Theme, keywords: list[str] | None = None) -> str | None:
     core = theme.focus_subtopic or theme.phrase
     words = [w for w in normalize(core).split() if w not in FILLER_WORDS]
     stems = {f5_stem(w) for w in words}
-    budget = 1 if len(words) >= LONG_CORE_WORDS else MAX_QUERY_KEYWORDS
-    added = 0
+    budget = 0 if len(words) >= LONG_CORE_WORDS else MAX_QUERY_KEYWORDS
     for keyword in keywords or []:
+        if budget == 0:
+            break
         kw = query_form(normalize(keyword))
+        # Temada zaten geçen (aynı köklü) sözcükler tekrar eklenmez.
         if not kw or f5_stem(kw) in stems:
             continue
         words.append(kw)
         stems.add(f5_stem(kw))
-        added += 1
-        if added >= budget:
-            break
+        budget -= 1
     query = " ".join(words)
     if len(query) > MAX_QUERY_CHARS:
         query = query[:MAX_QUERY_CHARS].rsplit(" ", 1)[0]

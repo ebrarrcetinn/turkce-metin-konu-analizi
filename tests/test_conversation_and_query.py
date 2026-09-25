@@ -1,3 +1,11 @@
+"""
+Dosya   : tests/test_conversation_and_query.py
+Konu    : Sohbet Takibi ve Sorgu Testleri
+Açıklama: Sohbet konusu hesaplamasını, tema ifadelerini ve arama sorgusu üretimini test eder.
+Yazar   : Ebrar Cemre Çetin
+Tarih   : 27.09.2026
+"""
+
 import pytest
 
 from src.config import OTHER_LABEL
@@ -83,9 +91,9 @@ def test_query_focus_and_keywords_dedup():
         "kuantum bilgisayarlar kübit işlemci"
 
 
-def test_query_removes_filler_and_limits_keywords_for_long_core():
+def test_query_keeps_long_theme_phrase_as_is():
     theme = _theme(["Biyoloji", "Bilim", "Kitaplar"], "biyoloji hakkında bilimsel kitaplar")
-    assert build_query(theme, ["dna", "hücreler"]) == "biyoloji bilimsel kitaplar dna"
+    assert build_query(theme, ["dna", "hücreler"]) == "biyoloji hakkında bilimsel kitaplar"
 
 
 def test_query_skips_verbs_and_strips_case_suffix():
@@ -96,6 +104,7 @@ def test_query_skips_verbs_and_strips_case_suffix():
 @pytest.mark.parametrize("token, expected", [
     ("okudum", None), ("düşünüyorum", None), ("gidecek", None), ("kedi", "kedi"),
     ("evrimden", "evrim"), ("dna", "dna"), ("bilgisayar", "bilgisayar"),
+    ("kuantum", "kuantum"), ("kaptım", None),
 ])
 def test_query_form(token, expected):
     assert query_form(token) == expected

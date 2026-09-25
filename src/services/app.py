@@ -1,7 +1,11 @@
-"""Sınıflandırma, sohbet takibi, arama ve kayıt adımlarını birleştiren servis.
-
-Web ve veritabanı hataları yakalanır; sınıflandırma ve sohbet takibi bu hatalardan
-etkilenmez.
+"""
+Dosya   : src/services/app.py
+Konu    : Uygulama Servisi
+Açıklama: Bir mesaj için sınıflandırma, sohbet takibi, sorgu üretimi, internet araması ve
+          veritabanı kaydı adımlarını sırayla çalıştırır. Web veya veritabanı hataları
+          sınıflandırmayı durdurmaz.
+Yazar   : Ebrar Cemre Çetin
+Tarih   : 27.09.2026
 """
 
 from __future__ import annotations
@@ -13,7 +17,7 @@ from dataclasses import dataclass, field
 
 from src.config import WEB_OFFLINE_COOLDOWN_SECONDS, WEB_SEARCH_ENABLED
 from src.database.db import Database, DatabaseError
-from src.models.predictor import STATUS_EMPTY, Prediction, TopicClassifier
+from src.models.topic_model import STATUS_EMPTY, Prediction, TopicModel
 from src.preprocessing.text import normalize
 from src.services.conversation import ConversationTracker, Theme
 from src.services.query_builder import build_query
@@ -52,7 +56,7 @@ def new_session_id() -> str:
 
 
 class ChatService:
-    def __init__(self, classifier: TopicClassifier, db: Database | None,
+    def __init__(self, classifier: TopicModel, db: Database | None,
                  search_client: WebSearchClient | None = None,
                  web_enabled: bool = WEB_SEARCH_ENABLED,
                  tracker: ConversationTracker | None = None,

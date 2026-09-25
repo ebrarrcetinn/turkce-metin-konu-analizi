@@ -32,4 +32,3 @@ Thumbs.db
 *.db-journal
 *.db-wal
 *.db-shm
-/reports/predictions_test.jsonl

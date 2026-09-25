@@ -1,8 +1,4 @@
-# Çalışma zamanı + eğitim bağımlılıkları (Python 3.11 ve 3.12 ile test edildi)
+# Çalışma zamanı bağımlılıkları (Python 3.11 ve 3.12 ile test edildi)
 numpy==2.4.4
-pandas==3.0.2
-scikit-learn==1.8.0
 scipy==1.17.1
-joblib==1.5.3
 requests==2.33.1
-matplotlib==3.10.9

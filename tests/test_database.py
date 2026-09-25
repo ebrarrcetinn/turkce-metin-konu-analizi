@@ -1,3 +1,11 @@
+"""
+Dosya   : tests/test_database.py
+Konu    : Veritabanı Testleri
+Açıklama: Tablo oluşturma, kayıt, şema geçişi ve önbellek işlemlerini test eder.
+Yazar   : Ebrar Cemre Çetin
+Tarih   : 27.09.2026
+"""
+
 import sqlite3
 from datetime import UTC, datetime, timedelta
 
@@ -6,7 +14,7 @@ import pytest
 from src.database.db import SCHEMA_VERSION, Database, DatabaseError
 
 META = {"model_version": "1.0.0", "model_name": "m", "training_timestamp": "t",
-        "dataset": {"version": "d"}, "artifact_sha256": "abc", "metrics": {"f1": 0.9},
+        "dataset": {"version": "d"}, "weights_sha256": "abc", "metrics": {"f1": 0.9},
         "thresholds": {"min_confidence": 0.75}}
 PRED = {"text": "Kuantum bilgisayarlar kübit kullanır.", "status": "ok",
         "general": "Teknoloji", "confidence": 0.99,

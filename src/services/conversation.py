@@ -1,8 +1,11 @@
-"""Sohbet konusu takibi ve tema ifadesinin üretilmesi.
-
-Her konunun skoru `eski * decay + olasılık` ile güncellenir. Tema ifadesi konuların
-rolüne göre kurulur: Kitaplar ortam, Bilim niteleyici, diğerleri alan konusudur
-("bilimsel kitaplar", "tarih kitapları", "biyoloji hakkında bilimsel kitaplar").
+"""
+Dosya   : src/services/conversation.py
+Konu    : Sohbet Konusu Takibi
+Açıklama: Her mesajın konu olasılıklarını azalan ağırlıkla (eski * decay + yeni) biriktirerek
+          sohbetin genel konusunu bulur ve "bilimsel kitaplar", "biyoloji hakkında
+          bilimsel kitaplar" gibi doğal bir tema ifadesi üretir.
+Yazar   : Ebrar Cemre Çetin
+Tarih   : 26.09.2026
 """
 
 from __future__ import annotations

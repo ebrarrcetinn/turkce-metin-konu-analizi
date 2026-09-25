@@ -1,5 +1,13 @@
-"""Sınıflandırmadan veritabanına ve arama katmanına kadar uçtan uca akış testleri."""
+"""
+Dosya   : tests/test_integration.py
+Konu    : Uçtan Uca Testler
+Açıklama: Sınıflandırmadan veritabanına ve arama katmanına kadar tüm akışı ve konsol
+          uygulamasını test eder.
+Yazar   : Ebrar Cemre Çetin
+Tarih   : 27.09.2026
+"""
 
+import io
 import os
 import subprocess
 import sys
@@ -184,7 +192,33 @@ def test_cli_handles_eof(tmp_path):
     assert proc.returncode == 0 and "Girdi sonu" in proc.stdout
 
 
-def test_cli_missing_model_gives_guidance(tmp_path):
-    proc = _run_cli(["--no-web", "--model", str(tmp_path / "yok.joblib")], "q\n", tmp_path)
-    assert proc.returncode == 2
-    assert "python train.py" in proc.stderr and "Traceback" not in proc.stderr
+def test_model_preparer_trains_when_model_missing(tmp_path, monkeypatch):
+    """Model yoksa proje.py veriyi indirip eğitir; burada adımlar sahte nesnelerle izlenir."""
+    import proje
+
+    calls = []
+    processed = tmp_path / "processed"
+
+    class FakeBuilder:
+        def __init__(self, out_dir):
+            calls.append("build")
+
+        def build(self):
+            processed.mkdir()
+
+    class FakeTrainer:
+        report = {"algorithm": "softmax_regression",
+                  "metrics": {"val_thresholded": {"macro_f1": 0.8}}}
+
+        def __init__(self, processed_dir, model_path):
+            calls.append("train")
+
+        def run(self):
+            return "model"
+
+    monkeypatch.setattr(proje, "fetch_all", lambda: calls.append("download"))
+    monkeypatch.setattr(proje, "DatasetBuilder", FakeBuilder)
+    monkeypatch.setattr(proje, "Trainer", FakeTrainer)
+    preparer = proje.ModelPreparer(tmp_path / "model", processed, out=io.StringIO())
+    assert preparer.prepare() == "model"
+    assert calls == ["download", "build", "train"]

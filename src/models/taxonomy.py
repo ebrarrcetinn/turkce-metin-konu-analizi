@@ -1,6 +1,10 @@
-"""Hedef taksonomi ve kaynak veri kategorilerinden taksonomiye eşleme.
-
-Ayrıntılı gerekçe: TAXONOMY.md
+"""
+Dosya   : src/models/taxonomy.py
+Konu    : Konu Taksonomisi
+Açıklama: Genel konuları (Fizik, Kimya, Biyoloji, Teknoloji, Bilim, Kitaplar, Spor, Tarih) ve
+          alt konularını tanımlar; kaynak veri setindeki kategorileri bu taksonomiye eşler.
+Yazar   : Ebrar Cemre Çetin
+Tarih   : 23.09.2026
 """
 
 from __future__ import annotations

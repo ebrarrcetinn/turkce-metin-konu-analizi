@@ -1,3 +1,11 @@
+"""
+Dosya   : tests/test_taxonomy.py
+Konu    : Taksonomi Testleri
+Açıklama: Kategori eşlemesini ve genel konu - alt konu hiyerarşisinin tutarlılığını test eder.
+Yazar   : Ebrar Cemre Çetin
+Tarih   : 27.09.2026
+"""
+
 from src.config import OTHER_LABEL
 from src.models.taxonomy import (
     ALL_GENERAL_LABELS,

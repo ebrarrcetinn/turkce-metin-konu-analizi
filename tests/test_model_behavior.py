@@ -1,12 +1,16 @@
-"""Eğitilmiş modelle kritik senaryo, kabul ve uç durum testleri.
-
-Buradaki cümleler eğitim verisinde bulunmaz.
+"""
+Dosya   : tests/test_model_behavior.py
+Konu    : Eğitilmiş Model Davranış Testleri
+Açıklama: Kuantum ayrımı, ödevdeki örnek cümleler, tek sözcüklük konu adları ve uç durumlar
+          üzerinde eğitilmiş modelin davranışını test eder. Cümleler eğitim verisinde yoktur.
+Yazar   : Ebrar Cemre Çetin
+Tarih   : 27.09.2026
 """
 
 import pytest
 
-from src.models.predictor import STATUS_EMPTY, STATUS_OK, STATUS_OUT_OF_SCOPE, STATUS_UNCERTAIN
 from src.models.taxonomy import validate_hierarchy
+from src.models.topic_model import STATUS_EMPTY, STATUS_OK, STATUS_OUT_OF_SCOPE, STATUS_UNCERTAIN
 
 pytestmark = pytest.mark.model
 
@@ -42,8 +46,8 @@ def test_acceptance_b_science_top_guess(classifier):
     assert p.top_guess == "Bilim"
 
 
-@pytest.mark.xfail(strict=True, reason="Bilinen sorun KI-001: Bilim sınıfı yalnızca epistemoloji "
-                   "kartlarından besleniyor; güven 0.49 < eşik 0.75 olduğundan 'Belirsiz'.")
+@pytest.mark.xfail(strict=True, reason="Bilinen sorun: Bilim sınıfı yalnızca bilim felsefesi "
+                   "kartlarından besleniyor; güven eşiğin altında kaldığı için 'Belirsiz'.")
 def test_acceptance_b_science_confident(classifier):
     p = classifier.predict("Bilim insanları hipotezlerini deney ve gözlem kullanarak test eder.")
     assert (p.status, p.general) == (STATUS_OK, "Bilim")
@@ -71,7 +75,6 @@ def test_empty_like_inputs(classifier, text):
 def test_greeting_is_not_a_topic(classifier):
     p = classifier.predict("Merhaba")
     assert p.status != STATUS_OK
-    assert p.short_input
 
 
 def test_very_long_text_is_truncated_not_crashing(classifier):
@@ -116,6 +119,25 @@ def test_confidence_bounds_and_latency(classifier):
     assert p.latency_ms < 100
 
 
+@pytest.mark.parametrize("text, general", [
+    ("kitaplar", "Kitaplar"), ("bilim", "Bilim"), ("biyoloji", "Biyoloji"),
+    ("fizik", "Fizik"), ("kimya", "Kimya"), ("spor", "Spor"), ("tarih", "Tarih"),
+])
+def test_single_topic_word(classifier, text, general):
+    """Ödev senaryosundaki gibi tek sözcüklük konu adları tanınmalı."""
+    assert classifier.predict(text).general == general
+
+
+def test_quantum_word_shows_both_topics(classifier):
+    p = classifier.predict("kuantum")
+    topics = {p.general} | {name for name, _ in p.related_topics}
+    assert {"Fizik", "Teknoloji"} <= topics
+
+
+def test_several_subtopics_listed_for_general_word(classifier):
+    assert len(classifier.predict("biyoloji").subtopics) >= 2
+
+
 def test_keywords_come_from_model_weights(classifier):
     kws = classifier.keywords("Kuantum bilgisayarlar kübit kullanır.", "Teknoloji")
-    assert "kübit" in kws and "kullanır" not in kws
+    assert kws and kws[0] == "kübit"

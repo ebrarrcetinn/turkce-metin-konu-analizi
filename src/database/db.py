@@ -1,4 +1,12 @@
-"""SQLite kalıcılık katmanı. Şema sürümü PRAGMA user_version ile yönetilir."""
+"""
+Dosya   : src/database/db.py
+Konu    : SQLite Veritabanı Katmanı
+Açıklama: Metinleri, tahmin edilen konuları, sohbet konularını, arama sorgularını ve internet
+          sonuçlarını SQLite veritabanına kaydeder; şema sürümünü yönetir ve arama
+          sonuçlarını önbellekte tutar.
+Yazar   : Ebrar Cemre Çetin
+Tarih   : 26.09.2026
+"""
 
 from __future__ import annotations
 
@@ -173,7 +181,7 @@ class Database:
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
                 (metadata["model_version"], metadata["model_name"],
                  metadata["training_timestamp"], metadata["dataset"]["version"],
-                 metadata["artifact_sha256"], _dumps(metadata["metrics"]),
+                 metadata.get("weights_sha256", ""), _dumps(metadata["metrics"]),
                  _dumps(metadata["thresholds"]), utcnow()))
 
     def start_session(self, session_id: str, model_version: str | None) -> None:

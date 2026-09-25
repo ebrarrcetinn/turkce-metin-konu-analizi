@@ -1,4 +1,11 @@
-"""Veri kaynakları: sabitlenmiş commit'ler, SHA-256 doğrulaması ve provenance kaydı."""
+"""
+Dosya   : src/data/sources.py
+Konu    : Veri Kaynaklarının İndirilmesi
+Açıklama: Eğitim ve değerlendirme verilerini sabit commit adreslerinden indirir, her dosyayı
+          SHA-256 ile doğrular ve kaynak/lisans bilgisini provenance.json dosyasına yazar.
+Yazar   : Ebrar Cemre Çetin
+Tarih   : 23.09.2026
+"""
 
 from __future__ import annotations
 

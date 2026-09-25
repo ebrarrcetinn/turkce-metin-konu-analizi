@@ -1,6 +1,10 @@
-"""Türkçe Wikipedia (birincil) ve DuckDuckGo (yedek) üzerinden arama.
-
-Ağ ve API hataları SearchOutcome durumuna çevrilir; istemci dışarıya istisna sızdırmaz.
+"""
+Dosya   : src/services/web_search.py
+Konu    : İnternet Araması
+Açıklama: Türkçe Wikipedia (birincil) ve DuckDuckGo (yedek) üzerinden arama yapar; ağ ve API
+          hatalarını yakalayıp sonuç durumuna çevirir.
+Yazar   : Ebrar Cemre Çetin
+Tarih   : 26.09.2026
 """
 
 from __future__ import annotations
