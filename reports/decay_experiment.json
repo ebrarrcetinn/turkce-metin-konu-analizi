@@ -1,0 +1,55 @@
+{
+  "n_conversations": 400,
+  "phase_len": 4,
+  "results": {
+    "0.0": {
+      "tracking_accuracy": 0.8959,
+      "mean_switch_lag": 1.127,
+      "blend_at_switch": 0.005,
+      "spurious_flip_rate": 0.11,
+      "three_topic_retention": 0.0025
+    },
+    "0.3": {
+      "tracking_accuracy": 0.9172,
+      "mean_switch_lag": 1.137,
+      "blend_at_switch": 0.765,
+      "spurious_flip_rate": 0.0783,
+      "three_topic_retention": 0.0075
+    },
+    "0.5": {
+      "tracking_accuracy": 0.9222,
+      "mean_switch_lag": 1.268,
+      "blend_at_switch": 0.8625,
+      "spurious_flip_rate": 0.0508,
+      "three_topic_retention": 0.01
+    },
+    "0.6": {
+      "tracking_accuracy": 0.8575,
+      "mean_switch_lag": 1.87,
+      "blend_at_switch": 0.87,
+      "spurious_flip_rate": 0.0383,
+      "three_topic_retention": 0.0575
+    },
+    "0.7": {
+      "tracking_accuracy": 0.8344,
+      "mean_switch_lag": 2.123,
+      "blend_at_switch": 0.87,
+      "spurious_flip_rate": 0.0275,
+      "three_topic_retention": 0.5575
+    },
+    "0.8": {
+      "tracking_accuracy": 0.7744,
+      "mean_switch_lag": 2.612,
+      "blend_at_switch": 0.8525,
+      "spurious_flip_rate": 0.025,
+      "three_topic_retention": 0.5975
+    },
+    "0.9": {
+      "tracking_accuracy": 0.7003,
+      "mean_switch_lag": 3.22,
+      "blend_at_switch": 0.81,
+      "spurious_flip_rate": 0.0233,
+      "three_topic_retention": 0.605
+    }
+  }
+}

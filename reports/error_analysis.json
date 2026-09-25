@@ -1,0 +1,511 @@
+{
+  "n_test": 3263,
+  "n_errors_with_threshold": 345,
+  "error_rate": 0.1057,
+  "errors_rejected_as_uncertain": 134,
+  "errors_rejected_as_out_of_scope": 75,
+  "errors_confidently_wrong": 136,
+  "errors_true_class_rank2": 147,
+  "most_confused_pairs": [
+    {
+      "true": "Teknoloji",
+      "predicted": "Diğer",
+      "count": 37,
+      "examples": [
+        {
+          "text": "hızlı üs alma farklı zamanlı aktiviteler arasından çakışmayan en çok etkinliği seçme.",
+          "confidence": 0.4621,
+          "status": "out_of_scope",
+          "argmax": "Diğer"
+        },
+        {
+          "text": "finfet akım sızıntısını önlemek ve performansı artırmak için tasarlandığı mimari.",
+          "confidence": 0.8085,
+          "status": "out_of_scope",
+          "argmax": "Diğer"
+        },
+        {
+          "text": "kristal osilatör kuvars kristalinin piezoelektrik özelliğini kullanarak bilgisayarın bileşenleri üreten bileşen.",
+          "confidence": 0.6045,
+          "status": "uncertain",
+          "argmax": "Teknoloji"
+        },
+        {
+          "text": "tarayıcı kağıt üzerindeki yazılı belgeleri ve fotoğrafları optik çeviren aygıt.",
+          "confidence": 0.6553,
+          "status": "uncertain",
+          "argmax": "Teknoloji"
+        }
+      ]
+    },
+    {
+      "true": "Tarih",
+      "predicted": "Diğer",
+      "count": 35,
+      "examples": [
+        {
+          "text": "stratigrafi farklı dönemlere ait toprak ve kültür katmanlarını inceleme yöntemi.",
+          "confidence": 0.4823,
+          "status": "uncertain",
+          "argmax": "Tarih"
+        },
+        {
+          "text": "krater ingiltere'de bulunan dev taş blokların dairesel dizildiği gizemli anıt.",
+          "confidence": 0.6797000000000001,
+          "status": "uncertain",
+          "argmax": "Tarih"
+        },
+        {
+          "text": "yangın katmanı antik yunan'da kadınların mücevher ve kozmetik eşyalarını koyduğu kapaklı kutu.",
+          "confidence": 0.5173,
+          "status": "uncertain",
+          "argmax": "Kitaplar"
+        },
+        {
+          "text": "dor düzeni sütun başlığı akantus yapraklarıyla süslü görkemli ve zengin mimari düzen.",
+          "confidence": 0.3733,
+          "status": "uncertain",
+          "argmax": "Tarih"
+        }
+      ]
+    },
+    {
+      "true": "Biyoloji",
+      "predicted": "Diğer",
+      "count": 33,
+      "examples": [
+        {
+          "text": "gutasyon yaprak kenarlarından damlalar halinde fazla suyun dışarı atılması",
+          "confidence": 0.7339,
+          "status": "uncertain",
+          "argmax": "Biyoloji"
+        },
+        {
+          "text": "kibritotu kurak ve yarı kurak bölgelerdeki kısa boylu otsu bozkır",
+          "confidence": 0.6308,
+          "status": "uncertain",
+          "argmax": "Biyoloji"
+        },
+        {
+          "text": "nasti hareketi yapmak uyarının yönüne bağlı olmadan yaprakların irkilme ile kapanması",
+          "confidence": 0.6939000000000001,
+          "status": "uncertain",
+          "argmax": "Biyoloji"
+        },
+        {
+          "text": "c4 yolu kullanmak sıcak iklimde fotorespirasyondan kaçınmak için özel c4 yolu kullanmak",
+          "confidence": 0.6736000000000001,
+          "status": "out_of_scope",
+          "argmax": "Diğer"
+        }
+      ]
+    },
+    {
+      "true": "Kitaplar",
+      "predicted": "Diğer",
+      "count": 31,
+      "examples": [
+        {
+          "text": "tarama deseni siyah beyaz çizimlerde gölgelendirme sağlayan noktalı doku kağıdı",
+          "confidence": 0.7328,
+          "status": "uncertain",
+          "argmax": "Kitaplar"
+        },
+        {
+          "text": "tony stark kolları ve bacakları hareket edebilen eklemli oyuncak figür",
+          "confidence": 0.3309,
+          "status": "uncertain",
+          "argmax": "Spor"
+        },
+        {
+          "text": "korku gazı tüm evreni sıfırlayarak hikayeleri baştan başlatan köklü yenilenme",
+          "confidence": 0.41960000000000003,
+          "status": "uncertain",
+          "argmax": "Kitaplar"
+        },
+        {
+          "text": "karınca adam dünyayı ele geçirmek veya kötülük yapmak isteyen baş düşman",
+          "confidence": 0.49210000000000004,
+          "status": "uncertain",
+          "argmax": "Kitaplar"
+        }
+      ]
+    },
+    {
+      "true": "Spor",
+      "predicted": "Diğer",
+      "count": 30,
+      "examples": [
+        {
+          "text": "ara derece tekrarlayan darbeler sonucu kemikte oluşan mikroskobik stres kırığı çatlağı.",
+          "confidence": 0.4596,
+          "status": "uncertain",
+          "argmax": "Spor"
+        },
+        {
+          "text": "koordinasyon enerji dönüşümünü artıran karbon fiber plakalı modern taban teknolojisi.",
+          "confidence": 0.5104000000000001,
+          "status": "uncertain",
+          "argmax": "Spor"
+        },
+        {
+          "text": "çekiç döndürmek okullar arasında düzenlenen minikler, yıldızlar ve gençler kros yarışmaları.",
+          "confidence": 0.5878,
+          "status": "uncertain",
+          "argmax": "Spor"
+        },
+        {
+          "text": "ikili sıkıştırma hakemlerin tartışmalı pozisyonları ekrandan ağır çekimde incelemesi.",
+          "confidence": 0.5141,
+          "status": "uncertain",
+          "argmax": "Spor"
+        }
+      ]
+    },
+    {
+      "true": "Fizik",
+      "predicted": "Diğer",
+      "count": 25,
+      "examples": [
+        {
+          "text": "eş duyum eğrisi sinyali çoğaltıp modüle ederek çoklu ses hissi veren efekt.",
+          "confidence": 0.5203,
+          "status": "uncertain",
+          "argmax": "Fizik"
+        },
+        {
+          "text": "ses gücü müzik aletlerinin perdesini doğru nota frekansına ayarlama aleti.",
+          "confidence": 0.997,
+          "status": "out_of_scope",
+          "argmax": "Diğer"
+        },
+        {
+          "text": "örnekleme frekansı enstrüman ve vokal seslerini ayrı kanallardan ayarlayan kontrol masası.",
+          "confidence": 0.7945,
+          "status": "out_of_scope",
+          "argmax": "Diğer"
+        },
+        {
+          "text": "feedback kesmek yapı elemanlarının doğrudan birbirine temas ederek ilettiği mekanik ses.",
+          "confidence": 0.363,
+          "status": "uncertain",
+          "argmax": "Teknoloji"
+        }
+      ]
+    },
+    {
+      "true": "Diğer",
+      "predicted": "Teknoloji",
+      "count": 22,
+      "examples": [
+        {
+          "text": "borç yapılandırma çipli kartlarda dolandırıcılığı önleyen güvenli mikroişlemci standardı.",
+          "confidence": 0.9004000000000001,
+          "status": "ok",
+          "argmax": "Teknoloji"
+        },
+        {
+          "text": "toptan satış robotik yazılımların piyasada gerçekleştirdiği otomatik hisse işlemleri",
+          "confidence": 0.8129000000000001,
+          "status": "ok",
+          "argmax": "Teknoloji"
+        },
+        {
+          "text": "radyo frekansı ajan adaylarına verilen yoğun sorguya dayanma ve direnç eğitimi",
+          "confidence": 0.774,
+          "status": "ok",
+          "argmax": "Teknoloji"
+        },
+        {
+          "text": "bant sistemi ürünleri taşıyarak gereksiz fiziksel eforu önleyen konveyör hat.",
+          "confidence": 0.8345,
+          "status": "ok",
+          "argmax": "Teknoloji"
+        }
+      ]
+    },
+    {
+      "true": "Diğer",
+      "predicted": "Biyoloji",
+      "count": 20,
+      "examples": [
+        {
+          "text": "güvercin postası toksinler arasında en zehirli protein bazlı biyolojik ajan",
+          "confidence": 0.883,
+          "status": "ok",
+          "argmax": "Biyoloji"
+        },
+        {
+          "text": "münhasır ekonomik bölge kıyı devletine deniz tabanı ve su kütlesindeki tanıyan alan.",
+          "confidence": 0.8363,
+          "status": "ok",
+          "argmax": "Biyoloji"
+        },
+        {
+          "text": "güvenilirlik doğal ekosistemi ve diğer canlıları ahlaki özne sayan yaklaşım.",
+          "confidence": 0.9992000000000001,
+          "status": "ok",
+          "argmax": "Biyoloji"
+        },
+        {
+          "text": "pug cinsi yanaklarındaki turuncu benekleri ve tepeliğiyle bilinen papağan.",
+          "confidence": 0.996,
+          "status": "ok",
+          "argmax": "Biyoloji"
+        }
+      ]
+    }
+  ],
+  "error_rate_by_word_count": {
+    "<=8": {
+      "error_rate": 0.0583,
+      "n": 103
+    },
+    "9-10": {
+      "error_rate": 0.1078,
+      "n": 1354
+    },
+    "11-12": {
+      "error_rate": 0.1067,
+      "n": 1678
+    },
+    ">=13": {
+      "error_rate": 0.1094,
+      "n": 128
+    }
+  },
+  "oov": {
+    "mean_oov_ratio_errors": 0.1437,
+    "mean_oov_ratio_correct": 0.1276,
+    "mean_oov_ratio_f5_errors": 0.0398,
+    "mean_oov_ratio_f5_correct": 0.0303
+  },
+  "other_class": {
+    "in_scope_sent_to_other": 209,
+    "other_accepted_as_topic": 102
+  },
+  "ood_unseen_false_accept_topics": {
+    "Biyoloji": 224,
+    "Tarih": 149,
+    "Spor": 98,
+    "Kimya": 98,
+    "Fizik": 58,
+    "Teknoloji": 53,
+    "Kitaplar": 26,
+    "Bilim": 9
+  },
+  "ood_unseen_worst_categories": {
+    "demircilik": 0.406,
+    "balikcilik": 0.366,
+    "turkiyecografyasi": 0.316,
+    "dunyacografyasi": 0.233,
+    "fotografcilik": 0.188,
+    "tesisat": 0.167
+  },
+  "external_error_examples": {
+    "bquad": [
+      {
+        "text": "Besinlerin öğütülmesi ya da fiziksel güçle daha küçük parçalara ayrılmasına mekanik sindirim denir.",
+        "status": "out_of_scope",
+        "label": "Diğer",
+        "top_guess": "Diğer",
+        "confidence": 0.3303
+      },
+      {
+        "text": "Spermlerin de içinde bulunduğu bu sıvıya semen denir.",
+        "status": "uncertain",
+        "label": "Belirsiz",
+        "top_guess": "Kimya",
+        "confidence": 0.5278
+      },
+      {
+        "text": "Bu çalışmalarından dolayı Watson ve Crick, 1962 yılında Nobel Ödülü aldılar.",
+        "status": "out_of_scope",
+        "label": "Diğer",
+        "top_guess": "Diğer",
+        "confidence": 0.9565
+      },
+      {
+        "text": "Spermin baş kısmının ucunda akrozom adı verilen kese yer alır.",
+        "status": "uncertain",
+        "label": "Belirsiz",
+        "top_guess": "Biyoloji",
+        "confidence": 0.2639
+      },
+      {
+        "text": "Kemosentezde fotosentezden farklı olarak ışık enerjisi yerine kimyasal enerji kullanılır.",
+        "status": "uncertain",
+        "label": "Belirsiz",
+        "top_guess": "Biyoloji",
+        "confidence": 0.7495
+      },
+      {
+        "text": "Granumlar da ara lamellerle birbirine tutunarak Güneş ışığının daha fazla emilmesini sağlayan granaları oluşturur (Görsel 2.6).",
+        "status": "uncertain",
+        "label": "Belirsiz",
+        "top_guess": "Biyoloji",
+        "confidence": 0.4263
+      }
+    ],
+    "ottoman": [
+      {
+        "text": "Bayezid'in babaannesinin babası Eba Yezid'in adından gelir.",
+        "status": "out_of_scope",
+        "label": "Diğer",
+        "top_guess": "Diğer",
+        "confidence": 0.9554
+      },
+      {
+        "text": "Fatih, İslam peygamberi Muhammed'in Konstantiniyye elbet fetholunacaktır.",
+        "status": "out_of_scope",
+        "label": "Diğer",
+        "top_guess": "Diğer",
+        "confidence": 0.9067
+      },
+      {
+        "text": "Paris Antlaşması’nın en önemli nedeni, Kırım Savaşı'ında büyük zarar uğrayan ilgili devletlerin barış için diplomasi arayışıdır.",
+        "status": "out_of_scope",
+        "label": "Diğer",
+        "top_guess": "Diğer",
+        "confidence": 0.6897
+      },
+      {
+        "text": "Osmanlı İmparatorluğu, 1850'lerden itibaren dış borç almaya başlamıştı ve 1870'lere gelindiğinde devlet hem ekonomik hem de siyasal bunalıma sürüklenmişti.",
+        "status": "out_of_scope",
+        "label": "Diğer",
+        "top_guess": "Diğer",
+        "confidence": 0.57
+      },
+      {
+        "text": "yüzyılda başlayan sömürgeleştirme hareketlerinin dışında kalan İtalya Krallığı, Fransız İhtilali'nden yaklaşık bir yüzyıl sonra, 1870 yılında, siyasi birliğini geç olarak sağladığında Afrika topraklarının hemen hemen tamamı Avrupalı devletlerin tarafından paylaşılmıştı.",
+        "status": "uncertain",
+        "label": "Belirsiz",
+        "top_guess": "Spor",
+        "confidence": 0.2332
+      },
+      {
+        "text": "Ama Cem Sultan bu teklifi reddetti.Benzeri teklifler tekrar yapıldıysa da, bunlar da sonuç vermedi.",
+        "status": "out_of_scope",
+        "label": "Diğer",
+        "top_guess": "Diğer",
+        "confidence": 0.9713
+      }
+    ]
+  },
+  "probes": {
+    "ood": [
+      {
+        "text": "Akşam pizza söyleyeceğim.",
+        "status": "out_of_scope",
+        "label": "Diğer",
+        "confidence": 0.9709,
+        "top3": {
+          "Diğer": 0.9709,
+          "Kitaplar": 0.0077,
+          "Spor": 0.0067
+        }
+      },
+      {
+        "text": "Yarın sabah dişçiye gitmem gerekiyor.",
+        "status": "out_of_scope",
+        "label": "Diğer",
+        "confidence": 0.9319,
+        "top3": {
+          "Diğer": 0.9319,
+          "Spor": 0.0177,
+          "Biyoloji": 0.0147
+        }
+      },
+      {
+        "text": "Bu kazağın rengi bana hiç yakışmadı.",
+        "status": "out_of_scope",
+        "label": "Diğer",
+        "confidence": 0.5469,
+        "top3": {
+          "Diğer": 0.5469,
+          "Spor": 0.1264,
+          "Biyoloji": 0.0981
+        }
+      },
+      {
+        "text": "Hafta sonu anneannemin bahçesinde domates topladık.",
+        "status": "out_of_scope",
+        "label": "Diğer",
+        "confidence": 0.9957,
+        "top3": {
+          "Diğer": 0.9957,
+          "Spor": 0.0015,
+          "Biyoloji": 0.0008
+        }
+      }
+    ],
+    "ambiguous_or_multi_topic": [
+      {
+        "text": "Einstein'ın hayatını anlatan biyografi kitabını bitirdim.",
+        "status": "ok",
+        "label": "Kitaplar",
+        "confidence": 0.935,
+        "top3": {
+          "Kitaplar": 0.935,
+          "Tarih": 0.0223,
+          "Diğer": 0.0127
+        }
+      },
+      {
+        "text": "Osmanlı döneminde yazılmış astronomi kitapları incelendi.",
+        "status": "ok",
+        "label": "Tarih",
+        "confidence": 0.7833,
+        "top3": {
+          "Tarih": 0.7833,
+          "Kitaplar": 0.188,
+          "Fizik": 0.0178
+        }
+      },
+      {
+        "text": "Futbolcuların performansı yapay zeka ile analiz ediliyor.",
+        "status": "ok",
+        "label": "Spor",
+        "confidence": 0.7509,
+        "top3": {
+          "Spor": 0.7509,
+          "Teknoloji": 0.2475,
+          "Biyoloji": 0.0007
+        }
+      },
+      {
+        "text": "Harika, yine bilgisayar çöktü, tam da teslim günü!",
+        "status": "out_of_scope",
+        "label": "Diğer",
+        "confidence": 0.7589,
+        "top3": {
+          "Diğer": 0.7589,
+          "Teknoloji": 0.0948,
+          "Fizik": 0.0319
+        }
+      },
+      {
+        "text": "Deney tüpünde tepkime gerçekleşti.",
+        "status": "ok",
+        "label": "Kimya",
+        "confidence": 0.9984,
+        "top3": {
+          "Kimya": 0.9984,
+          "Bilim": 0.0005,
+          "Biyoloji": 0.0004
+        }
+      },
+      {
+        "text": "Gen.",
+        "status": "ok",
+        "label": "Biyoloji",
+        "confidence": 1.0,
+        "top3": {
+          "Biyoloji": 1.0,
+          "Spor": 0.0,
+          "Tarih": 0.0
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,1175 @@
+{
+  "compare": {
+    "E12": {
+      "train": {
+        "n": 16319,
+        "accuracy": 0.9364,
+        "precision_macro": 0.9586,
+        "recall_macro": 0.8673,
+        "macro_f1": 0.9084,
+        "weighted_f1": 0.9354
+      },
+      "val": {
+        "n": 3264,
+        "accuracy": 0.8165,
+        "precision_macro": 0.7755,
+        "recall_macro": 0.6589,
+        "macro_f1": 0.7065,
+        "weighted_f1": 0.8092
+      },
+      "val_per_class_f1": {
+        "Fizik": 0.7239,
+        "Kimya": 0.7231,
+        "Biyoloji": 0.7894,
+        "Teknoloji": 0.6818,
+        "Bilim": 0.4762,
+        "Kitaplar": 0.565,
+        "Spor": 0.8397,
+        "Tarih": 0.6863,
+        "Diğer": 0.8734
+      },
+      "fit_seconds": 17.66,
+      "latency_ms_per_text": 0.154,
+      "size_mb": 816.88,
+      "name": "fastText supervised (subword 2-5, bigram)",
+      "features": "sıfırdan eğitilen 100d alt-sözcük gömmeleri",
+      "hyperparameters": {
+        "epoch": "25",
+        "lr": "0.5",
+        "wordNgrams": "2",
+        "minn": "2",
+        "maxn": "5",
+        "dim": "100",
+        "loss": "softmax",
+        "thread": "1",
+        "seed": "42",
+        "verbose": "0"
+      }
+    },
+    "E01": {
+      "train": {
+        "n": 16319,
+        "accuracy": 0.9976,
+        "precision_macro": 0.9946,
+        "recall_macro": 0.9991,
+        "macro_f1": 0.9969,
+        "weighted_f1": 0.9976
+      },
+      "val": {
+        "n": 3264,
+        "accuracy": 0.852,
+        "precision_macro": 0.8763,
+        "recall_macro": 0.6748,
+        "macro_f1": 0.7441,
+        "weighted_f1": 0.8444
+      },
+      "val_per_class_f1": {
+        "Fizik": 0.7599,
+        "Kimya": 0.6154,
+        "Biyoloji": 0.8608,
+        "Teknoloji": 0.7754,
+        "Bilim": 0.56,
+        "Kitaplar": 0.6161,
+        "Spor": 0.9033,
+        "Tarih": 0.7114,
+        "Diğer": 0.8942
+      },
+      "fit_seconds": 1.94,
+      "latency_ms_per_text": 3.004,
+      "size_mb": 2.42,
+      "name": "BoW + MultinomialNB",
+      "features": "word 1-2gram counts",
+      "hyperparameters": {
+        "alpha": "0.3",
+        "class_prior": "None",
+        "fit_prior": "True",
+        "force_alpha": "True"
+      }
+    },
+    "E02": {
+      "train": {
+        "n": 16319,
+        "accuracy": 0.9987,
+        "precision_macro": 0.9971,
+        "recall_macro": 0.9994,
+        "macro_f1": 0.9982,
+        "weighted_f1": 0.9987
+      },
+      "val": {
+        "n": 3264,
+        "accuracy": 0.864,
+        "precision_macro": 0.8273,
+        "recall_macro": 0.7253,
+        "macro_f1": 0.7657,
+        "weighted_f1": 0.8598
+      },
+      "val_per_class_f1": {
+        "Fizik": 0.7813,
+        "Kimya": 0.7241,
+        "Biyoloji": 0.8702,
+        "Teknoloji": 0.8075,
+        "Bilim": 0.4828,
+        "Kitaplar": 0.6639,
+        "Spor": 0.9113,
+        "Tarih": 0.7477,
+        "Diğer": 0.9025
+      },
+      "fit_seconds": 1.93,
+      "latency_ms_per_text": 3.493,
+      "size_mb": 12.59,
+      "name": "TF-IDF(word) + ComplementNB",
+      "features": "word 1-2gram tf-idf",
+      "hyperparameters": {
+        "alpha": "0.3",
+        "class_prior": "None",
+        "fit_prior": "True",
+        "force_alpha": "True",
+        "norm": "False"
+      }
+    },
+    "E03": {
+      "train": {
+        "n": 16319,
+        "accuracy": 0.9971,
+        "precision_macro": 0.9929,
+        "recall_macro": 0.9994,
+        "macro_f1": 0.9961,
+        "weighted_f1": 0.9971
+      },
+      "val": {
+        "n": 3264,
+        "accuracy": 0.8339,
+        "precision_macro": 0.7805,
+        "recall_macro": 0.7625,
+        "macro_f1": 0.7676,
+        "weighted_f1": 0.833
+      },
+      "val_per_class_f1": {
+        "Fizik": 0.7307,
+        "Kimya": 0.7737,
+        "Biyoloji": 0.8231,
+        "Teknoloji": 0.752,
+        "Bilim": 0.6761,
+        "Kitaplar": 0.6525,
+        "Spor": 0.8698,
+        "Tarih": 0.7544,
+        "Diğer": 0.8759
+      },
+      "fit_seconds": 34.9,
+      "latency_ms_per_text": 3.292,
+      "size_mb": 11.41,
+      "name": "TF-IDF(word) + LogisticRegression",
+      "features": "word 1-2gram tf-idf",
+      "hyperparameters": {
+        "C": "10.0",
+        "class_weight": "balanced",
+        "dual": "False",
+        "fit_intercept": "True",
+        "intercept_scaling": "1",
+        "l1_ratio": "0.0",
+        "max_iter": "3000",
+        "n_jobs": "None",
+        "penalty": "deprecated",
+        "random_state": "None",
+        "solver": "lbfgs",
+        "tol": "0.0001",
+        "verbose": "0",
+        "warm_start": "False"
+      }
+    },
+    "E04": {
+      "train": {
+        "n": 16319,
+        "accuracy": 0.9995,
+        "precision_macro": 0.999,
+        "recall_macro": 0.9999,
+        "macro_f1": 0.9994,
+        "weighted_f1": 0.9995
+      },
+      "val": {
+        "n": 3264,
+        "accuracy": 0.8505,
+        "precision_macro": 0.8005,
+        "recall_macro": 0.7745,
+        "macro_f1": 0.7837,
+        "weighted_f1": 0.8493
+      },
+      "val_per_class_f1": {
+        "Fizik": 0.7547,
+        "Kimya": 0.7786,
+        "Biyoloji": 0.8441,
+        "Teknoloji": 0.7714,
+        "Bilim": 0.6667,
+        "Kitaplar": 0.6805,
+        "Spor": 0.8969,
+        "Tarih": 0.7719,
+        "Diğer": 0.8885
+      },
+      "fit_seconds": 2.53,
+      "latency_ms_per_text": 0.722,
+      "size_mb": 9.61,
+      "name": "TF-IDF(word) + LinearSVM",
+      "features": "word 1-2gram tf-idf",
+      "hyperparameters": {
+        "C": "1.0",
+        "class_weight": "balanced",
+        "dual": "auto",
+        "fit_intercept": "True",
+        "intercept_scaling": "1",
+        "loss": "squared_hinge",
+        "max_iter": "1000",
+        "multi_class": "ovr",
+        "penalty": "l2",
+        "random_state": "42",
+        "tol": "0.0001",
+        "verbose": "0"
+      }
+    },
+    "E05": {
+      "train": {
+        "n": 16319,
+        "accuracy": 0.9989,
+        "precision_macro": 0.998,
+        "recall_macro": 0.9998,
+        "macro_f1": 0.9989,
+        "weighted_f1": 0.9989
+      },
+      "val": {
+        "n": 3264,
+        "accuracy": 0.8713,
+        "precision_macro": 0.8008,
+        "recall_macro": 0.8391,
+        "macro_f1": 0.8169,
+        "weighted_f1": 0.8716
+      },
+      "val_per_class_f1": {
+        "Fizik": 0.8118,
+        "Kimya": 0.8243,
+        "Biyoloji": 0.8733,
+        "Teknoloji": 0.8132,
+        "Bilim": 0.6923,
+        "Kitaplar": 0.7344,
+        "Spor": 0.9129,
+        "Tarih": 0.7875,
+        "Diğer": 0.902
+      },
+      "fit_seconds": 2.12,
+      "latency_ms_per_text": 0.661,
+      "size_mb": 6.37,
+      "name": "TF-IDF(word, F5 stem) + LinearSVM",
+      "features": "F5-stemmed word 1-2gram tf-idf",
+      "hyperparameters": {
+        "C": "1.0",
+        "class_weight": "balanced",
+        "dual": "auto",
+        "fit_intercept": "True",
+        "intercept_scaling": "1",
+        "loss": "squared_hinge",
+        "max_iter": "1000",
+        "multi_class": "ovr",
+        "penalty": "l2",
+        "random_state": "42",
+        "tol": "0.0001",
+        "verbose": "0"
+      }
+    },
+    "E06": {
+      "train": {
+        "n": 16319,
+        "accuracy": 0.9858,
+        "precision_macro": 0.9722,
+        "recall_macro": 0.9961,
+        "macro_f1": 0.9839,
+        "weighted_f1": 0.9858
+      },
+      "val": {
+        "n": 3264,
+        "accuracy": 0.8753,
+        "precision_macro": 0.8006,
+        "recall_macro": 0.825,
+        "macro_f1": 0.8113,
+        "weighted_f1": 0.8754
+      },
+      "val_per_class_f1": {
+        "Fizik": 0.7955,
+        "Kimya": 0.7891,
+        "Biyoloji": 0.8829,
+        "Teknoloji": 0.8173,
+        "Bilim": 0.6667,
+        "Kitaplar": 0.7077,
+        "Spor": 0.9299,
+        "Tarih": 0.8056,
+        "Diğer": 0.9074
+      },
+      "fit_seconds": 7.14,
+      "latency_ms_per_text": 0.917,
+      "size_mb": 3.87,
+      "name": "TF-IDF(char_wb 2-5) + LinearSVM",
+      "features": "char_wb 2-5gram tf-idf",
+      "hyperparameters": {
+        "C": "1.0",
+        "class_weight": "balanced",
+        "dual": "auto",
+        "fit_intercept": "True",
+        "intercept_scaling": "1",
+        "loss": "squared_hinge",
+        "max_iter": "1000",
+        "multi_class": "ovr",
+        "penalty": "l2",
+        "random_state": "42",
+        "tol": "0.0001",
+        "verbose": "0"
+      }
+    },
+    "E07": {
+      "train": {
+        "n": 16319,
+        "accuracy": 0.9993,
+        "precision_macro": 0.9986,
+        "recall_macro": 0.9999,
+        "macro_f1": 0.9992,
+        "weighted_f1": 0.9993
+      },
+      "val": {
+        "n": 3264,
+        "accuracy": 0.8888,
+        "precision_macro": 0.8497,
+        "recall_macro": 0.8098,
+        "macro_f1": 0.8274,
+        "weighted_f1": 0.8874
+      },
+      "val_per_class_f1": {
+        "Fizik": 0.8103,
+        "Kimya": 0.8175,
+        "Biyoloji": 0.8977,
+        "Teknoloji": 0.8479,
+        "Bilim": 0.6875,
+        "Kitaplar": 0.7251,
+        "Spor": 0.9339,
+        "Tarih": 0.8094,
+        "Diğer": 0.9171
+      },
+      "fit_seconds": 9.07,
+      "latency_ms_per_text": 1.883,
+      "size_mb": 10.5,
+      "name": "TF-IDF(word+char) + LinearSVM",
+      "features": "word 1-2 + char_wb 2-5 tf-idf",
+      "hyperparameters": {
+        "C": "1.0",
+        "class_weight": "balanced",
+        "dual": "auto",
+        "fit_intercept": "True",
+        "intercept_scaling": "1",
+        "loss": "squared_hinge",
+        "max_iter": "1000",
+        "multi_class": "ovr",
+        "penalty": "l2",
+        "random_state": "42",
+        "tol": "0.0001",
+        "verbose": "0"
+      }
+    },
+    "E08": {
+      "train": {
+        "n": 16319,
+        "accuracy": 0.9959,
+        "precision_macro": 0.9918,
+        "recall_macro": 0.9992,
+        "macro_f1": 0.9955,
+        "weighted_f1": 0.9959
+      },
+      "val": {
+        "n": 3264,
+        "accuracy": 0.8827,
+        "precision_macro": 0.83,
+        "recall_macro": 0.8311,
+        "macro_f1": 0.8284,
+        "weighted_f1": 0.882
+      },
+      "val_per_class_f1": {
+        "Fizik": 0.8146,
+        "Kimya": 0.8286,
+        "Biyoloji": 0.8889,
+        "Teknoloji": 0.8169,
+        "Bilim": 0.7273,
+        "Kitaplar": 0.7222,
+        "Spor": 0.9264,
+        "Tarih": 0.8184,
+        "Diğer": 0.9121
+      },
+      "fit_seconds": 47.13,
+      "latency_ms_per_text": 5.501,
+      "size_mb": 16.05,
+      "name": "TF-IDF(word+char) + LogisticRegression",
+      "features": "word 1-2 + char_wb 2-5 tf-idf",
+      "hyperparameters": {
+        "C": "10.0",
+        "class_weight": "balanced",
+        "dual": "False",
+        "fit_intercept": "True",
+        "intercept_scaling": "1",
+        "l1_ratio": "0.0",
+        "max_iter": "3000",
+        "n_jobs": "None",
+        "penalty": "deprecated",
+        "random_state": "None",
+        "solver": "lbfgs",
+        "tol": "0.0001",
+        "verbose": "0",
+        "warm_start": "False"
+      }
+    },
+    "E09": {
+      "train": {
+        "n": 16319,
+        "accuracy": 1.0,
+        "precision_macro": 1.0,
+        "recall_macro": 1.0,
+        "macro_f1": 1.0,
+        "weighted_f1": 1.0
+      },
+      "val": {
+        "n": 3264,
+        "accuracy": 0.8778,
+        "precision_macro": 0.8577,
+        "recall_macro": 0.761,
+        "macro_f1": 0.8005,
+        "weighted_f1": 0.8745
+      },
+      "val_per_class_f1": {
+        "Fizik": 0.8072,
+        "Kimya": 0.7805,
+        "Biyoloji": 0.885,
+        "Teknoloji": 0.8117,
+        "Bilim": 0.6316,
+        "Kitaplar": 0.6583,
+        "Spor": 0.9304,
+        "Tarih": 0.7884,
+        "Diğer": 0.9116
+      },
+      "fit_seconds": 7.37,
+      "latency_ms_per_text": 5.446,
+      "size_mb": 7.4,
+      "name": "TF-IDF(word+char) + SGD(modified_huber)",
+      "features": "word 1-2 + char_wb 2-5 tf-idf",
+      "hyperparameters": {
+        "alpha": "2e-05",
+        "average": "False",
+        "class_weight": "balanced",
+        "early_stopping": "False",
+        "epsilon": "0.1",
+        "eta0": "0.01",
+        "fit_intercept": "True",
+        "l1_ratio": "0.15",
+        "learning_rate": "optimal",
+        "loss": "modified_huber",
+        "max_iter": "50",
+        "n_iter_no_change": "5",
+        "n_jobs": "None",
+        "penalty": "l2",
+        "power_t": "0.5",
+        "random_state": "42",
+        "shuffle": "True",
+        "tol": "0.001",
+        "validation_fraction": "0.1",
+        "verbose": "0",
+        "warm_start": "False"
+      }
+    },
+    "E10": {
+      "train": {
+        "n": 16319,
+        "accuracy": 0.9126,
+        "precision_macro": 0.9261,
+        "recall_macro": 0.8422,
+        "macro_f1": 0.88,
+        "weighted_f1": 0.9109
+      },
+      "val": {
+        "n": 3264,
+        "accuracy": 0.7889,
+        "precision_macro": 0.7437,
+        "recall_macro": 0.6599,
+        "macro_f1": 0.695,
+        "weighted_f1": 0.7836
+      },
+      "val_per_class_f1": {
+        "Fizik": 0.6801,
+        "Kimya": 0.7059,
+        "Biyoloji": 0.7553,
+        "Teknoloji": 0.6739,
+        "Bilim": 0.6333,
+        "Kitaplar": 0.547,
+        "Spor": 0.8065,
+        "Tarih": 0.6019,
+        "Diğer": 0.851
+      },
+      "fit_seconds": 31.8,
+      "latency_ms_per_text": 67.873,
+      "size_mb": 140.71,
+      "name": "LSA(SVD-300) embedding + MLP",
+      "features": "char tf-idf -> 300d LSA dense embedding",
+      "hyperparameters": {
+        "activation": "relu",
+        "alpha": "0.0001",
+        "batch_size": "auto",
+        "beta_1": "0.9",
+        "beta_2": "0.999",
+        "early_stopping": "False",
+        "epsilon": "1e-08",
+        "hidden_layer_sizes": "(256,)",
+        "learning_rate": "constant",
+        "learning_rate_init": "0.001",
+        "max_fun": "15000",
+        "max_iter": "30",
+        "momentum": "0.9",
+        "n_iter_no_change": "10",
+        "nesterovs_momentum": "True",
+        "power_t": "0.5",
+        "random_state": "42",
+        "shuffle": "True",
+        "solver": "adam",
+        "tol": "0.0001",
+        "validation_fraction": "0.1",
+        "verbose": "False",
+        "warm_start": "False"
+      }
+    },
+    "E11": {
+      "train": {
+        "n": 16319,
+        "accuracy": 0.9993,
+        "precision_macro": 0.9987,
+        "recall_macro": 0.9999,
+        "macro_f1": 0.9993,
+        "weighted_f1": 0.9993
+      },
+      "val": {
+        "n": 3264,
+        "accuracy": 0.8934,
+        "precision_macro": 0.8395,
+        "recall_macro": 0.8345,
+        "macro_f1": 0.8356,
+        "weighted_f1": 0.8927
+      },
+      "val_per_class_f1": {
+        "Fizik": 0.8136,
+        "Kimya": 0.8369,
+        "Biyoloji": 0.8969,
+        "Teknoloji": 0.8577,
+        "Bilim": 0.7042,
+        "Kitaplar": 0.7273,
+        "Spor": 0.9403,
+        "Tarih": 0.8218,
+        "Diğer": 0.9215
+      },
+      "fit_seconds": 9.75,
+      "latency_ms_per_text": 1.909,
+      "size_mb": 8.93,
+      "name": "TF-IDF(word F5 + char) + LinearSVM",
+      "features": "F5 word 1-2 + char_wb 2-5 tf-idf",
+      "hyperparameters": {
+        "C": "1.0",
+        "class_weight": "balanced",
+        "dual": "auto",
+        "fit_intercept": "True",
+        "intercept_scaling": "1",
+        "loss": "squared_hinge",
+        "max_iter": "1000",
+        "multi_class": "ovr",
+        "penalty": "l2",
+        "random_state": "42",
+        "tol": "0.0001",
+        "verbose": "0"
+      }
+    }
+  },
+  "cv": {
+    "E07": {
+      "macro_f1_mean": 0.8265,
+      "macro_f1_std": 0.009,
+      "folds": [
+        0.8222,
+        0.8384,
+        0.8121,
+        0.8269,
+        0.8329
+      ]
+    },
+    "E08": {
+      "macro_f1_mean": 0.8205,
+      "macro_f1_std": 0.007,
+      "folds": [
+        0.8249,
+        0.8277,
+        0.8073,
+        0.8214,
+        0.8211
+      ]
+    },
+    "E11": {
+      "macro_f1_mean": 0.8305,
+      "macro_f1_std": 0.0103,
+      "folds": [
+        0.8324,
+        0.8388,
+        0.8103,
+        0.835,
+        0.8358
+      ]
+    }
+  },
+  "tune": [
+    {
+      "exp_id": "E11",
+      "C": 0.1,
+      "max_other": null,
+      "train": {
+        "n": 16319,
+        "accuracy": 0.9684,
+        "precision_macro": 0.9319,
+        "recall_macro": 0.9891,
+        "macro_f1": 0.959,
+        "weighted_f1": 0.9686
+      },
+      "val": {
+        "n": 3264,
+        "accuracy": 0.8612,
+        "precision_macro": 0.7681,
+        "recall_macro": 0.8629,
+        "macro_f1": 0.8074,
+        "weighted_f1": 0.8631
+      },
+      "val_per_class_f1": {
+        "Fizik": 0.7712,
+        "Kimya": 0.7901,
+        "Biyoloji": 0.8672,
+        "Teknoloji": 0.8123,
+        "Bilim": 0.7033,
+        "Kitaplar": 0.7138,
+        "Spor": 0.9148,
+        "Tarih": 0.8011,
+        "Diğer": 0.8926
+      },
+      "fit_seconds": 8.2,
+      "latency_ms_per_text": 2.159,
+      "size_mb": 11.08
+    },
+    {
+      "exp_id": "E11",
+      "C": 0.25,
+      "max_other": null,
+      "train": {
+        "n": 16319,
+        "accuracy": 0.9885,
+        "precision_macro": 0.9763,
+        "recall_macro": 0.997,
+        "macro_f1": 0.9865,
+        "weighted_f1": 0.9885
+      },
+      "val": {
+        "n": 3264,
+        "accuracy": 0.8775,
+        "precision_macro": 0.7973,
+        "recall_macro": 0.8606,
+        "macro_f1": 0.8248,
+        "weighted_f1": 0.8783
+      },
+      "val_per_class_f1": {
+        "Fizik": 0.8152,
+        "Kimya": 0.8212,
+        "Biyoloji": 0.89,
+        "Teknoloji": 0.8317,
+        "Bilim": 0.7059,
+        "Kitaplar": 0.7164,
+        "Spor": 0.9247,
+        "Tarih": 0.8132,
+        "Diğer": 0.9051
+      },
+      "fit_seconds": 8.71,
+      "latency_ms_per_text": 1.919,
+      "size_mb": 9.93
+    },
+    {
+      "exp_id": "E11",
+      "C": 0.5,
+      "max_other": null,
+      "train": {
+        "n": 16319,
+        "accuracy": 0.9961,
+        "precision_macro": 0.9924,
+        "recall_macro": 0.9992,
+        "macro_f1": 0.9958,
+        "weighted_f1": 0.9961
+      },
+      "val": {
+        "n": 3264,
+        "accuracy": 0.886,
+        "precision_macro": 0.8227,
+        "recall_macro": 0.8487,
+        "macro_f1": 0.8336,
+        "weighted_f1": 0.8858
+      },
+      "val_per_class_f1": {
+        "Fizik": 0.8167,
+        "Kimya": 0.8333,
+        "Biyoloji": 0.8995,
+        "Teknoloji": 0.8415,
+        "Bilim": 0.7436,
+        "Kitaplar": 0.7132,
+        "Spor": 0.9362,
+        "Tarih": 0.8045,
+        "Diğer": 0.9137
+      },
+      "fit_seconds": 9.17,
+      "latency_ms_per_text": 2.103,
+      "size_mb": 9.33
+    },
+    {
+      "exp_id": "E11",
+      "C": 1.0,
+      "max_other": null,
+      "train": {
+        "n": 16319,
+        "accuracy": 0.9993,
+        "precision_macro": 0.9987,
+        "recall_macro": 0.9999,
+        "macro_f1": 0.9993,
+        "weighted_f1": 0.9993
+      },
+      "val": {
+        "n": 3264,
+        "accuracy": 0.8934,
+        "precision_macro": 0.8395,
+        "recall_macro": 0.8345,
+        "macro_f1": 0.8356,
+        "weighted_f1": 0.8927
+      },
+      "val_per_class_f1": {
+        "Fizik": 0.8136,
+        "Kimya": 0.8369,
+        "Biyoloji": 0.8969,
+        "Teknoloji": 0.8577,
+        "Bilim": 0.7042,
+        "Kitaplar": 0.7273,
+        "Spor": 0.9403,
+        "Tarih": 0.8218,
+        "Diğer": 0.9215
+      },
+      "fit_seconds": 9.45,
+      "latency_ms_per_text": 1.949,
+      "size_mb": 8.93
+    },
+    {
+      "exp_id": "E11",
+      "C": 2.0,
+      "max_other": null,
+      "train": {
+        "n": 16319,
+        "accuracy": 1.0,
+        "precision_macro": 1.0,
+        "recall_macro": 1.0,
+        "macro_f1": 1.0,
+        "weighted_f1": 1.0
+      },
+      "val": {
+        "n": 3264,
+        "accuracy": 0.8931,
+        "precision_macro": 0.8487,
+        "recall_macro": 0.823,
+        "macro_f1": 0.8338,
+        "weighted_f1": 0.8917
+      },
+      "val_per_class_f1": {
+        "Fizik": 0.8171,
+        "Kimya": 0.8489,
+        "Biyoloji": 0.8974,
+        "Teknoloji": 0.8468,
+        "Bilim": 0.6957,
+        "Kitaplar": 0.7154,
+        "Spor": 0.9417,
+        "Tarih": 0.8198,
+        "Diğer": 0.9215
+      },
+      "fit_seconds": 9.85,
+      "latency_ms_per_text": 1.97,
+      "size_mb": 8.69
+    },
+    {
+      "exp_id": "E11",
+      "C": 4.0,
+      "max_other": null,
+      "train": {
+        "n": 16319,
+        "accuracy": 1.0,
+        "precision_macro": 1.0,
+        "recall_macro": 1.0,
+        "macro_f1": 1.0,
+        "weighted_f1": 1.0
+      },
+      "val": {
+        "n": 3264,
+        "accuracy": 0.8943,
+        "precision_macro": 0.8544,
+        "recall_macro": 0.8074,
+        "macro_f1": 0.8278,
+        "weighted_f1": 0.8925
+      },
+      "val_per_class_f1": {
+        "Fizik": 0.8127,
+        "Kimya": 0.8613,
+        "Biyoloji": 0.9005,
+        "Teknoloji": 0.8513,
+        "Bilim": 0.625,
+        "Kitaplar": 0.7131,
+        "Spor": 0.9461,
+        "Tarih": 0.8176,
+        "Diğer": 0.9226
+      },
+      "fit_seconds": 9.99,
+      "latency_ms_per_text": 1.917,
+      "size_mb": 8.54
+    },
+    {
+      "exp_id": "E11",
+      "C": 8.0,
+      "max_other": null,
+      "train": {
+        "n": 16319,
+        "accuracy": 1.0,
+        "precision_macro": 1.0,
+        "recall_macro": 1.0,
+        "macro_f1": 1.0,
+        "weighted_f1": 1.0
+      },
+      "val": {
+        "n": 3264,
+        "accuracy": 0.8943,
+        "precision_macro": 0.8623,
+        "recall_macro": 0.8015,
+        "macro_f1": 0.8278,
+        "weighted_f1": 0.8922
+      },
+      "val_per_class_f1": {
+        "Fizik": 0.8081,
+        "Kimya": 0.8676,
+        "Biyoloji": 0.8998,
+        "Teknoloji": 0.8507,
+        "Bilim": 0.623,
+        "Kitaplar": 0.7131,
+        "Spor": 0.9461,
+        "Tarih": 0.819,
+        "Diğer": 0.9224
+      },
+      "fit_seconds": 10.67,
+      "latency_ms_per_text": 2.209,
+      "size_mb": 8.46
+    },
+    {
+      "exp_id": "E11",
+      "C": 0.1,
+      "max_other": 4000,
+      "train": {
+        "n": 11266,
+        "accuracy": 0.9673,
+        "precision_macro": 0.9462,
+        "recall_macro": 0.9854,
+        "macro_f1": 0.9647,
+        "weighted_f1": 0.9673
+      },
+      "val": {
+        "n": 3264,
+        "accuracy": 0.8174,
+        "precision_macro": 0.7081,
+        "recall_macro": 0.8741,
+        "macro_f1": 0.772,
+        "weighted_f1": 0.8213
+      },
+      "val_per_class_f1": {
+        "Fizik": 0.7277,
+        "Kimya": 0.7399,
+        "Biyoloji": 0.8312,
+        "Teknoloji": 0.7717,
+        "Bilim": 0.6602,
+        "Kitaplar": 0.7183,
+        "Spor": 0.8673,
+        "Tarih": 0.787,
+        "Diğer": 0.8449
+      },
+      "fit_seconds": 5.58,
+      "latency_ms_per_text": 2.164,
+      "size_mb": 9.21
+    },
+    {
+      "exp_id": "E11",
+      "C": 0.25,
+      "max_other": 4000,
+      "train": {
+        "n": 11266,
+        "accuracy": 0.9908,
+        "precision_macro": 0.985,
+        "recall_macro": 0.9963,
+        "macro_f1": 0.9905,
+        "weighted_f1": 0.9908
+      },
+      "val": {
+        "n": 3264,
+        "accuracy": 0.8422,
+        "precision_macro": 0.7423,
+        "recall_macro": 0.874,
+        "macro_f1": 0.7964,
+        "weighted_f1": 0.845
+      },
+      "val_per_class_f1": {
+        "Fizik": 0.7643,
+        "Kimya": 0.8,
+        "Biyoloji": 0.8609,
+        "Teknoloji": 0.7862,
+        "Bilim": 0.6809,
+        "Kitaplar": 0.7214,
+        "Spor": 0.8983,
+        "Tarih": 0.7868,
+        "Diğer": 0.8691
+      },
+      "fit_seconds": 6.16,
+      "latency_ms_per_text": 1.887,
+      "size_mb": 8.34
+    },
+    {
+      "exp_id": "E11",
+      "C": 0.5,
+      "max_other": 4000,
+      "train": {
+        "n": 11266,
+        "accuracy": 0.998,
+        "precision_macro": 0.9971,
+        "recall_macro": 0.9994,
+        "macro_f1": 0.9982,
+        "weighted_f1": 0.998
+      },
+      "val": {
+        "n": 3264,
+        "accuracy": 0.8569,
+        "precision_macro": 0.7614,
+        "recall_macro": 0.8692,
+        "macro_f1": 0.8071,
+        "weighted_f1": 0.8591
+      },
+      "val_per_class_f1": {
+        "Fizik": 0.7896,
+        "Kimya": 0.8182,
+        "Biyoloji": 0.8707,
+        "Teknoloji": 0.7985,
+        "Bilim": 0.6593,
+        "Kitaplar": 0.7266,
+        "Spor": 0.9172,
+        "Tarih": 0.8,
+        "Diğer": 0.8836
+      },
+      "fit_seconds": 6.04,
+      "latency_ms_per_text": 1.913,
+      "size_mb": 7.88
+    },
+    {
+      "exp_id": "E11",
+      "C": 1.0,
+      "max_other": 4000,
+      "train": {
+        "n": 11266,
+        "accuracy": 0.9997,
+        "precision_macro": 0.9996,
+        "recall_macro": 0.9999,
+        "macro_f1": 0.9998,
+        "weighted_f1": 0.9997
+      },
+      "val": {
+        "n": 3264,
+        "accuracy": 0.8612,
+        "precision_macro": 0.7719,
+        "recall_macro": 0.8604,
+        "macro_f1": 0.8102,
+        "weighted_f1": 0.8629
+      },
+      "val_per_class_f1": {
+        "Fizik": 0.7989,
+        "Kimya": 0.8477,
+        "Biyoloji": 0.8783,
+        "Teknoloji": 0.8007,
+        "Bilim": 0.6512,
+        "Kitaplar": 0.7111,
+        "Spor": 0.9129,
+        "Tarih": 0.8021,
+        "Diğer": 0.8887
+      },
+      "fit_seconds": 6.31,
+      "latency_ms_per_text": 1.899,
+      "size_mb": 7.57
+    },
+    {
+      "exp_id": "E11",
+      "C": 2.0,
+      "max_other": 4000,
+      "train": {
+        "n": 11266,
+        "accuracy": 1.0,
+        "precision_macro": 1.0,
+        "recall_macro": 1.0,
+        "macro_f1": 1.0,
+        "weighted_f1": 1.0
+      },
+      "val": {
+        "n": 3264,
+        "accuracy": 0.8664,
+        "precision_macro": 0.7823,
+        "recall_macro": 0.8553,
+        "macro_f1": 0.8142,
+        "weighted_f1": 0.8675
+      },
+      "val_per_class_f1": {
+        "Fizik": 0.8022,
+        "Kimya": 0.8533,
+        "Biyoloji": 0.8808,
+        "Teknoloji": 0.8111,
+        "Bilim": 0.6667,
+        "Kitaplar": 0.7041,
+        "Spor": 0.9185,
+        "Tarih": 0.7967,
+        "Diğer": 0.8945
+      },
+      "fit_seconds": 7.04,
+      "latency_ms_per_text": 1.913,
+      "size_mb": 7.39
+    },
+    {
+      "exp_id": "E11",
+      "C": 4.0,
+      "max_other": 4000,
+      "train": {
+        "n": 11266,
+        "accuracy": 1.0,
+        "precision_macro": 1.0,
+        "recall_macro": 1.0,
+        "macro_f1": 1.0,
+        "weighted_f1": 1.0
+      },
+      "val": {
+        "n": 3264,
+        "accuracy": 0.8713,
+        "precision_macro": 0.7911,
+        "recall_macro": 0.8533,
+        "macro_f1": 0.8187,
+        "weighted_f1": 0.8723
+      },
+      "val_per_class_f1": {
+        "Fizik": 0.8087,
+        "Kimya": 0.8571,
+        "Biyoloji": 0.8848,
+        "Teknoloji": 0.8119,
+        "Bilim": 0.6585,
+        "Kitaplar": 0.7138,
+        "Spor": 0.9242,
+        "Tarih": 0.811,
+        "Diğer": 0.8986
+      },
+      "fit_seconds": 6.59,
+      "latency_ms_per_text": 1.924,
+      "size_mb": 7.28
+    },
+    {
+      "exp_id": "E11",
+      "C": 8.0,
+      "max_other": 4000,
+      "train": {
+        "n": 11266,
+        "accuracy": 1.0,
+        "precision_macro": 1.0,
+        "recall_macro": 1.0,
+        "macro_f1": 1.0,
+        "weighted_f1": 1.0
+      },
+      "val": {
+        "n": 3264,
+        "accuracy": 0.8713,
+        "precision_macro": 0.7926,
+        "recall_macro": 0.8482,
+        "macro_f1": 0.8173,
+        "weighted_f1": 0.8722
+      },
+      "val_per_class_f1": {
+        "Fizik": 0.8167,
+        "Kimya": 0.8414,
+        "Biyoloji": 0.8826,
+        "Teknoloji": 0.8119,
+        "Bilim": 0.6585,
+        "Kitaplar": 0.7138,
+        "Spor": 0.924,
+        "Tarih": 0.8077,
+        "Diğer": 0.899
+      },
+      "fit_seconds": 7.53,
+      "latency_ms_per_text": 2.072,
+      "size_mb": 7.22
+    }
+  ],
+  "tune_best": {
+    "exp_id": "E11",
+    "C": 1.0,
+    "max_other": null,
+    "val_macro_f1": 0.8356
+  },
+  "hierarchy": {
+    "exp_id": "E11",
+    "C": 1.0,
+    "n_val_in_taxonomy": 1450,
+    "flat": {
+      "path_accuracy": 0.8379,
+      "path_macro_f1": 0.8534,
+      "general_accuracy_on_labeled": 0.9048,
+      "fit_seconds": 14.96,
+      "general_full_val": {
+        "n": 3264,
+        "accuracy": 0.8866,
+        "precision_macro": 0.7993,
+        "recall_macro": 0.8857,
+        "macro_f1": 0.8363,
+        "weighted_f1": 0.8881
+      },
+      "general_full_val_per_class_f1": {
+        "Fizik": 0.8182,
+        "Kimya": 0.8684,
+        "Biyoloji": 0.9082,
+        "Teknoloji": 0.8627,
+        "Bilim": 0.6593,
+        "Kitaplar": 0.7429,
+        "Spor": 0.9313,
+        "Tarih": 0.8261,
+        "Diğer": 0.91
+      }
+    },
+    "hierarchical": {
+      "path_accuracy": 0.7814,
+      "path_macro_f1": 0.81,
+      "general_accuracy_on_labeled": 0.8607,
+      "fit_seconds": 13.13,
+      "general_full_val": {
+        "n": 3264,
+        "accuracy": 0.8934,
+        "precision_macro": 0.8395,
+        "recall_macro": 0.8345,
+        "macro_f1": 0.8356,
+        "weighted_f1": 0.8927
+      },
+      "general_full_val_per_class_f1": {
+        "Fizik": 0.8136,
+        "Kimya": 0.8369,
+        "Biyoloji": 0.8969,
+        "Teknoloji": 0.8577,
+        "Bilim": 0.7042,
+        "Kitaplar": 0.7273,
+        "Spor": 0.9403,
+        "Tarih": 0.8218,
+        "Diğer": 0.9215
+      }
+    }
+  }
+}
