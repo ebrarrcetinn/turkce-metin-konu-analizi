@@ -1,190 +1,338 @@
 # Türkçe Metin Konu Analizi — Proje Raporu
 
-Yazar: Ebrar Cemre Çetin
+Hazırlayan: Ebrar Cemre Çetin
 Tarih: 27.09.2026
 
 ## 1. Amaç
 
-Kullanıcının yazdığı Türkçe metnin genel konusunu ve alt konularını bulmak, birden fazla
-mesajdan oluşan bir sohbetin genel konusunu takip etmek, bu konu için internette arama
-yapmak ve metinleri, konuları, sorguları ve arama sonuçlarını veritabanına kaydetmek.
-Ödevde istendiği gibi sınıflandırma algoritmaları hazır makine öğrenmesi kütüphaneleri
-yerine proje içinde yazılmıştır.
+Bu projede, kullanıcının yazdığı Türkçe bir metnin genel konusunu ve alt konularını bulan,
+birden fazla mesajdan oluşan bir sohbetin genel konusunu takip eden, bu konu için internette
+arama yapan ve metinleri, konuları, sorguları ve arama sonuçlarını veritabanına kaydeden bir
+konsol uygulaması geliştirdim. Ödevde istendiği gibi sınıflandırma algoritmalarını hazır
+makine öğrenmesi kütüphaneleri kullanmadan kendim yazdım; `numpy` ve `scipy`'yi yalnızca
+dizi ve seyrek matris yapısı olarak kullandım.
+
+Örneğin kullanıcı sırasıyla "Kitaplar hakkında konuşalım.", "Bilim ile ilgili neler var?" ve
+"Biyoloji hakkında ne önerirsin?" yazdığında program her mesajın konusunu (Kitaplar, Bilim,
+Biyoloji) bulur, sohbetin konusunu adım adım "kitaplar" → "bilimsel kitaplar" → "biyoloji
+hakkında bilimsel kitaplar" olarak günceller ve son ifadeyle internette arama yapar.
 
 ## 2. Sistem tasarımı
 
-Program nesne yönelimli olarak katmanlara ayrılmıştır. Her katman bir sonrakine yalnızca
-kendi sınıfının arayüzüyle bağlanır.
+Programı nesne yönelimli olarak katmanlara ayırdım. Her katman yalnızca kendi işini yapıyor;
+örneğin konsol sınıfı hiçbir hesap yapmıyor, yalnızca girdi alıp sonucu yazıyor. Böylece her
+parçayı ayrı ayrı test edebildim.
 
 | Katman | Sınıflar | Görev |
 |---|---|---|
-| Konsol | `ConsoleApp`, `ModelPreparer` (`proje.py`) | Döngü, komutlar, çıktı biçimi; model yoksa veri indirme ve eğitim |
+| Konsol | `ConsoleApp`, `ModelPreparer` (`proje.py`) | Döngü, komutlar, çıktı; model yoksa veri indirme ve eğitim |
 | Uygulama servisi | `ChatService` | Bir mesaj için tüm adımları sırayla çalıştırır, hataları yalıtır |
 | Model | `TopicModel`, `Trainer`, `Evaluator` | Tahmin, eğitim, ölçüm |
-| Algoritmalar | `TfidfVectorizer`, `CombinedVectorizer`, `MultinomialNaiveBayes`, `SoftmaxRegression`, `ClassificationReport` | Kendi yazılan ML bileşenleri |
+| Algoritmalar | `TfidfVectorizer`, `MultinomialNaiveBayes`, `SoftmaxRegression`, `ClassificationReport` | Kendi yazdığım ML bileşenleri |
 | Veri | `DatasetBuilder`, `DataSource` | İndirme, doğrulama, temizleme, bölme |
 | Sohbet | `ConversationTracker`, `Theme` | Sohbet konusu ve tema ifadesi |
 | Arama | `WebSearchClient` | Wikipedia ve DuckDuckGo |
 | Kayıt | `Database` | SQLite tabloları, şema sürümü, önbellek |
 
-Bir mesajın işlenişi:
+Programın tamamı tek komutla çalışıyor: `python proje.py`. Bilgisayarda eğitilmiş model yoksa
+program önce veriyi indiriyor, veri setini hazırlıyor ve modeli eğitiyor (yaklaşık 1 dakika),
+sonra sohbet döngüsüne geçiyor.
 
-1. Metin ön işlenir ve vektöre çevrilir.
-2. Model 39 sınıfın ("Genel > Alt" ve "Diğer") olasılığını üretir.
-3. Genel konu olasılığı, o konunun alt konu olasılıklarının toplamıdır. En olası genel
-   konunun olasılığı güven eşiğinin altındaysa sonuç "Belirsiz", en olası sınıf "Diğer" ise
-   "taksonomi dışında" olur.
-4. Alt konular, seçilen genel konu içindeki koşullu olasılığa göre sıralanır. En olası alt
-   konu her zaman, diğerleri payı %15'i aşarsa (en çok 3) listelenir. Ana konu dışında %20'yi
-   aşan genel konular "İlişkili Konular" olarak gösterilir.
-5. Sohbet skorları güncellenir, tema ifadesi ve arama sorgusu üretilir.
-6. Kayıt ve arama yapılır. İnternet veya veritabanı hatası sınıflandırmayı durdurmaz.
+## 3. Bir mesajın baştan sona işlenişi (örnek)
 
-## 3. Metin ön işleme
+Sistemin nasıl çalıştığını tek bir örnek cümle üzerinden anlatıyorum. Aşağıdaki sayıların
+hepsi eğittiğim modelin gerçek çıktılarıdır.
 
-* Python'un `str.lower()` fonksiyonu Türkçe "I" harfini "i", "İ" harfini "i̇" yaptığı için
-  özel `turkish_lower` fonksiyonu yazıldı.
-* Normalizasyon: bozuk karakter kodlaması onarımı, Unicode NFC, HTML/URL/@kullanıcı
-  temizliği, emoji ve rakamların atılması, kesme işaretinden sonraki eklerin atılması
-  ("Ankara'da" → "ankara"), noktalama yerine boşluk.
-* F5 kökleme: her sözcüğün ilk 5 harfi alınır. Türkçe gibi eklemeli bir dilde basit ama
-  etkili bir kökleme yöntemidir ("hücreler", "hücrenin" → "hücre").
-* Stopword listesi sözcük özelliklerinden çıkarılır.
+> Kullanıcı: "Kübitler, süperpozisyon sayesinde aynı anda birden fazla durumu temsil edebilir!"
 
-## 4. Veri
+**Adım 1 — Ön işleme.** Metni küçük harfe çeviriyor, noktalama işaretlerini atıyorum:
 
-Birincil kaynak Türkçe Tabu Veri Setidir (MIT, 150 kategori, 37.278 kart). Her kart bir
-kavram ve kısa açıklamasından oluşur; eğitim metni "kavram + açıklama"dır.
+    kübitler süperpozisyon sayesinde aynı anda birden fazla durumu temsil edebilir
+
+Sözcük özellikleri için her sözcüğün ilk 5 harfini alıyorum (F5 kökleme):
+
+    kübit süper sayes aynı anda birde fazla durum temsi edebi
+
+**Adım 2 — Sayıya çevirme (TF-IDF).** Model sayılarla çalıştığı için metni bir vektöre
+çeviriyorum. Bu cümleden 15 sözcük özelliği ("kübit", "fazla durum" gibi) ve 241 karakter
+parçası ("kübi", "üper" gibi) çıkıyor. Toplam 224.759 olası özellikten yalnızca bunlar sıfırdan
+farklı. Her özelliğin ağırlığı ne kadar ayırt edici olduğuna göre belirleniyor: "kübit" az
+metinde geçtiği için IDF değeri 7,66, "durum" çok yerde geçtiği için 5,10.
+
+**Adım 3 — Model skoru.** Softmax regresyon modelinde 39 sınıfın ("Fizik > Optik",
+"Teknoloji > Kuantum Bilgisayarlar", …, "Diğer") her biri için her özelliğin bir ağırlığı
+var. Örneğin eğitim sonunda "kübit" sözcüğünün ağırlığı "Teknoloji > Kuantum Bilgisayarlar"
+için +1,64, "Fizik > Kuantum Mekaniği" için −0,75 oldu. Model, metindeki özelliklerin
+ağırlıklarını toplayarak her sınıfa bir skor veriyor:
+
+| Sınıf | Skor |
+|---|---|
+| Teknoloji > Kuantum Bilgisayarlar | +1,02 |
+| Teknoloji > Nanoteknoloji | −2,05 |
+| Diğer | −2,74 |
+
+**Adım 4 — Olasılık.** Skorları softmax fonksiyonuyla toplamı %100 olan olasılıklara
+çeviriyorum: Kuantum Bilgisayarlar %96,4, Nanoteknoloji %1,3, Diğer %0,5.
+
+**Adım 5 — Genel konu ve alt konu.** Genel konunun olasılığı, alt konularının toplamı:
+Teknoloji = %96,4 + %1,3 + … = **%97,8**. Bu değer güven eşiğinin (%60) üstünde olduğu için
+sonuç kesin kabul ediliyor. Alt konu, Teknoloji içindeki payla veriliyor: Kuantum
+Bilgisayarlar %98,5.
+
+**Adım 6 — Sohbet konusu ve arama.** Bu mesajın olasılıkları sohbet skorlarına ekleniyor
+(bkz. bölüm 8). Sohbetin ilk mesajı olduğu ve tek bir alt konu baskın olduğu için tema
+"Teknoloji > Kuantum Bilgisayarlar" oluyor. Arama sorgusu tema adına mesajdaki en ayırt edici
+iki sözcüğün eklenmesiyle kuruluyor: **"kuantum bilgisayarlar kübitler sayesin"**. "kübitler"
+modelde bu konu için en yüksek ağırlığa sahip sözcük. "sayesinde" sözcüğünün sonundaki "-de"
+bulunma eki sorgu için kırpılıyor.
+
+**Adım 7 — Kayıt.** Metin, sonuç, sohbet konusu, sorgu ve internetten gelen sonuçlar SQLite
+veritabanına yazılıyor.
+
+## 4. Metin ön işleme
+
+* **Türkçe küçük harf.** Python'un `str.lower()` fonksiyonu "IŞIK" sözcüğünü "işik" yapıyor;
+  doğrusu "ışık". Bu yüzden I→ı ve İ→i dönüşümünü önce elle yapan `turkish_lower` fonksiyonunu
+  yazdım.
+* **Normalizasyon.** Bozuk karakter kodlamasını onarıyor, Unicode biçimini tekleştiriyor,
+  HTML etiketlerini, bağlantıları, @kullanıcı adlarını, emojileri ve rakamları atıyorum.
+  Kesme işaretinden sonraki ekleri de atıyorum: "Ankara'da" → "ankara".
+* **F5 kökleme.** Türkçede ekler sözcüğün sonuna geldiği için ilk 5 harf çoğu zaman kökü
+  koruyor: "hücreler", "hücrenin" → "hücre"; "kütüphaneden" → "kütüp". Sözlük gerektirmeyen
+  basit bir yöntem ama Türkçe metinlerde iyi sonuç veriyor.
+* **Stopword'ler.** "ve", "bir", "için" gibi her konuda geçen sözcükleri özelliklerden
+  çıkarıyorum.
+* **Boş girdiler.** "!!!", "12345" gibi anlamlı sözcük içermeyen girdileri sınıflandırmıyor,
+  kullanıcıya uyarı veriyorum.
+
+## 5. Veri
+
+Eğitim için GitHub'daki **Türkçe Tabu Veri Seti**'ni (MIT lisanslı, 150 kategori, 37.278 kart)
+kullandım. Her kart bir kavram ve kısa açıklamasından oluşuyor. Örnek bir kart ("genetik"
+kategorisi):
+
+> **alel** — bir genin kromozomdaki lokusunda bulunan alternatif formlarından biri.
+
+Eğitim metni olarak "kavram + açıklama" birleşimini aldım ve kartın kategorisini ödevdeki
+konulara eşledim: "genetik" → Biyoloji > Genetik, "futbol" → Spor > Futbol, "osmanli" →
+Tarih > Osmanlı Tarihi gibi. Veriyi her seferinde aynı sürüm gelsin diye sabit bir commit
+adresinden indiriyor ve her dosyayı SHA-256 özetiyle doğruluyorum.
 
 | Adım | Sayı |
 |---|---|
 | Ham kart | 37.278 |
-| Birden fazla konuya girebilen kategoriler (31 kategori) nedeniyle çıkarılan | 7.693 |
+| Birden fazla konuya girebilen 31 kategori nedeniyle çıkarılan | 7.693 |
 | Temizlik sonrası | 29.585 |
 | Eğitim / doğrulama / test | 16.023 / 3.458 / 3.479 |
-| Görülmemiş konu – eşik seçimi (`ood_val`) / son ölçüm (`ood_unseen`) | 2.785 / 3.275 |
-| Harici değerlendirme (biyoloji + Osmanlı tarihi paragraf cümleleri) | 800 |
+| Görülmemiş konu — eşik seçimi / son ölçüm | 2.785 / 3.275 |
+| Harici değerlendirme (biyoloji + Osmanlı tarihi cümleleri) | 800 |
 
-Kararlar:
+Veriyle ilgili aldığım kararlar:
 
-* **Terim gruplu bölme.** Aynı kavramın (ilk 6 harfi aynı sözcükler) kartları hep aynı
-  bölmeye düşer. Eğitim ile doğrulama/test arasında ortak grup ve birebir aynı metin sayısı
-  0'dır; karakter n-gram kosinüs benzerliği 0,9'u aşan yakın kopya oranı testte %0,06'dır.
-* **Görülmemiş konular.** "Diğer" kategorilerinin %35'i eğitimden tamamen ayrıldı. Bunların
-  yarısı güven eşiğini seçmekte, diğer yarısı yalnızca son ölçümde kullanıldı; iki yarı ortak
-  kategori içermez. Böylece "modelin tanımadığı bir konuda emin olmaması" ölçülebilir hale
-  geldi.
-* **Konu adı örnekleri.** Tabu oyununda kartın kendi kategori adı yasaklı sözcüktür; bu yüzden
-  "biyoloji" sözcüğü biyoloji kartlarında neredeyse hiç geçmez. İlk denemede model tek başına
-  "biyoloji" girdisini Teknoloji > Nanoteknoloji olarak sınıflandırdı ("-oloji" karakter
-  n-gram'ları nedeniyle). Her alt konu için alt konu adı, genel konu adı ve ikisinin birleşimi
-  eğitim setine eklendi (114 örnek). Bu örnekler yalnızca eğitim setindedir ve test sonuçlarını
-  etkilemez.
+* **Belirsiz kategorileri çıkardım.** Örneğin "anatomi" biyolojiye, "jeoloji" bilime çok
+  yakın. Bunları "Diğer" olarak eğitseydim model biyoloji metinlerine "Diğer" demeyi
+  öğrenirdi; bu yüzden 31 kategoriyi tamamen dışarıda bıraktım.
+* **Kuantumu ikiye ayırdım.** Veri setinde yalnızca bir "kuantum" kategorisi var. Ödevdeki
+  Fizik / Teknoloji ayrımını öğretebilmek için terimi kuantum hesaplamaya ait olan kartları
+  (kübit, kuantum kapısı, transmon…) Teknoloji > Kuantum Bilgisayarlar olarak, kalanları
+  Fizik > Kuantum Mekaniği olarak etiketledim. Örnek:
+  - "süperpozisyon — kuantum sisteminin ölçülene kadar olası tüm durumlarda eşzamanlı
+    bulunabilmesi ilkesi" → Fizik > Kuantum Mekaniği
+  - "topolojik kuantum bilgisayarı — hata toleransını … anyonların düğümlenmesiyle sağlayan
+    mimarisi" → Teknoloji > Kuantum Bilgisayarlar
+* **Terim gruplu bölme yaptım.** Aynı kavram birden fazla kartta geçebildiği için aynı
+  kavramın kartlarını hep aynı bölmeye koydum. Aksi halde model testte ezberlediği kavramı
+  görür ve başarı olduğundan yüksek çıkardı. Kontrol ettiğimde eğitim ile test arasında ortak
+  kavram sayısı 0, neredeyse aynı metin oranı %0,06 çıktı.
+* **Modelin hiç görmediği konular ayırdım.** "Diğer" kategorilerinin %35'ini (ör. balıkçılık,
+  kaligrafi) eğitimden tamamen çıkardım. Böylece modelin tanımadığı bir konuda "emin değilim"
+  deyip diyemediğini ölçebildim.
+* **Konu adlarını ekledim.** Tabu oyununda kartın kendi kategori adı yasaklı sözcük olduğu
+  için "biyoloji" sözcüğü biyoloji kartlarında neredeyse hiç geçmiyor. İlk denememde model tek
+  başına "biyoloji" yazılınca Teknoloji > Nanoteknoloji dedi, çünkü "-oloji" harf parçası
+  nanoteknoloji kartlarında sık geçiyordu. Her alt konu için "Genetik", "Biyoloji", "Biyoloji
+  Genetik" gibi 114 kısa örneği eğitim verisine ekledim; şimdi "biyoloji" girdisi %98,8 ile
+  Biyoloji çıkıyor. Bu örnekler yalnızca eğitim verisinde, test sonuçlarını etkilemiyor.
 
-## 5. Algoritmalar
+## 6. Kullandığım algoritmalar
 
-### 5.1 TF-IDF
+### 6.1 TF-IDF
 
-İki vektörleştirici birleştirilir: F5 kökleri üzerinde sözcük 1-2 gram ve her sözcüğün başına
-ve sonuna boşluk eklenmiş karakter 2-5 gram (en az 2 belgede geçenler). Toplam 196.785 özellik.
+İki vektörü yan yana birleştirdim: F5 köklerinden sözcük 1-2 gram ("kübit", "fazla durum") ve
+harf 2-5 gram ("kü", "kübi"). Harf parçaları Türkçedeki ekleri yakalıyor: "kitap", "kitaplar"
+ve "kitabın" ortak parçalar üzerinden birbirine bağlanıyor.
 
-* IDF: `idf(t) = ln((1 + n) / (1 + df(t))) + 1` (yumuşatılmış; hiçbir terim 0 almaz)
-* TF: `1 + ln(tf)` (alt doğrusal; tekrar eden sözcüğün etkisi sınırlanır)
-* Her vektör L2 normuyla 1 uzunluğa getirilir.
+* IDF = ln((1 + n) / (1 + df)) + 1. df, bir terimin kaç metinde geçtiği. Az metinde geçen terim
+  daha ayırt edici sayılıyor (yukarıdaki örnekte "kübit" 7,66, "durum" 5,10).
+* TF = 1 + ln(tf). Bir sözcüğün 10 kez geçmesi 10 kat değil yaklaşık 3,3 kat etki ediyor.
+* Her vektörü L2 normuyla 1 uzunluğa getiriyorum; uzun ve kısa metinler aynı ölçekte kalıyor.
 
-Sözlük ve IDF yalnızca eğitim verisinden öğrenilir.
+Sözlüğü ve IDF değerlerini yalnızca eğitim verisinden öğreniyorum.
 
-### 5.2 Çok terimli Naive Bayes (temel model)
+### 6.2 Naive Bayes (karşılaştırma modeli)
 
-`log P(k | x) ∝ log P(k) + Σ_j x_j · log P(j | k)`, `P(j | k) = (N_kj + α) / (N_k + α·F)`.
-200 bine yakın özellikte büyük α tüm sınıfları birbirine benzettiği için α = 0,001 seçildi;
-sınıf dengesizliğinin etkisini azaltmak için eşit önsel olasılık kullanıldı.
+Bayes kuralıyla her sınıf için log P(sınıf) + Σ değer · log P(özellik | sınıf) skorunu
+hesaplıyorum. Eğitimde görülmemiş bir özelliğin olasılığı sıfır olmasın diye Laplace
+düzeltmesi (α) ekliyorum. Klasik değer α = 1, ama 200 bine yakın özellikte bu değer bütün
+sınıfları birbirine benzetti. Doğrulama setinde denediğim değerler:
 
-### 5.3 Softmax regresyon (ana model)
+| α | Doğrulama macro F1 |
+|---|---|
+| 1 | 0,079 |
+| 0,1 | 0,515 |
+| 0,01 | 0,822 |
+| **0,001** | **0,833** |
 
-`p = softmax(xW + b)`. Kayıp, sınıf ağırlıklı çapraz entropi ve L2 düzenlileştirmedir. Sınıf
-ağırlığı `n / (K · n_k)` biçimindedir; böylece az örnekli sınıflar (Bilim, 182 örnek)
-bastırılmaz. Logitlere göre gradyan `(p − y)` olduğundan gradyan
-`Xᵀ · (ağırlık · (p − y)) + λW` ile hesaplanır.
+### 6.3 Softmax regresyon (ana model)
 
-* Eniyileme: mini-batch (256) Adam, öğrenme oranı 0,05.
-* Seyrek girdide yalnızca o batch'te geçen özelliklerin ağırlıkları güncellenir; bu, 200 bin
-  × 39'luk matrisin tamamını her adımda dolaşmaktan çok daha hızlıdır.
-* Erken durdurma: her epoch sonunda doğrulama macro F1 ölçülür, 3 epoch iyileşme olmazsa
-  durulur ve en iyi epoch'un ağırlıkları alınır.
+Her sınıf için bir ağırlık sütunu var. Skor = x · W + b; olasılık = softmax(skor). Eğitim,
+doğru sınıfın olasılığını artıracak şekilde W ve b'yi küçük adımlarla düzeltmekten ibaret.
 
-### 5.4 Kalibrasyon
+1. Ağırlıklar sıfırdan başlıyor; başta her sınıf eşit olasılıklı.
+2. Veriyi 256 örneklik gruplar halinde veriyorum. Her grupta model tahmin yapıyor, tahmin
+   edilen olasılıklarla doğru cevap arasındaki fark (p − y) hesaplanıyor. Örneğin doğru sınıfa
+   %30 olasılık verildiyse fark −0,70, yanlış bir sınıfa %40 verildiyse +0,40.
+3. Bu farkla ağırlıkların türevi xᵀ · (p − y) + λW bulunuyor ve ağırlıklar ters yönde biraz
+   güncelleniyor. Güncellemeyi Adam yöntemiyle yapıyorum; Adam her ağırlık için adım
+   büyüklüğünü kendisi ayarlıyor, nadir sözcüklerde daha büyük adım atıyor.
+4. **Sınıf ağırlıkları.** "Diğer" sınıfında 8.831, Bilim'de yalnızca 182 örnek var. Model küçük
+   sınıfları görmezden gelmesin diye her sınıfın hatasını n / (K · n_k) ile ağırlıklandırdım;
+   Bilim örneklerindeki hata yaklaşık 48 kat ağır sayılıyor.
+5. **L2 düzenlileştirme.** Ağırlıkların aşırı büyümesini (ezberlemeyi) küçük bir cezayla
+   engelliyorum.
+6. **Erken durdurma.** Verinin tamamı bir kez dolaşılınca bir tur (epoch) tamamlanıyor. Her
+   turdan sonra modeli doğrulama setinde ölçüyorum. 3 tur üst üste iyileşme olmazsa eğitimi
+   durdurup en iyi turdaki ağırlıkları alıyorum.
+7. Seyrek veride hız için yalnızca o grupta geçen özelliklerin ağırlıklarını güncelliyorum;
+   200 bin × 39'luk matrisin tamamını her adımda dolaşmak çok daha yavaş olurdu.
 
-Temperature scaling: logitler `T`'ye bölünür, `T` doğrulama setindeki negatif
-log-olabilirliği en küçükleyecek şekilde altın oran aramasıyla bulunur. Sınıf sıralaması
-değişmez, yalnızca güven skorları gerçek doğruluğa yaklaşır.
+### 6.4 Kalibrasyon
 
-### 5.5 Güven eşiği
+Modelin "%80 eminim" dediği tahminlerin gerçekten yaklaşık %80'inin doğru olması gerekiyor.
+Aksi halde "Belirsiz" kararı için koyduğum eşik anlamsız kalır. Bunun için temperature scaling
+kullandım: skorları bir T sayısına bölüyorum. T'yi doğrulama setinde en iyi sonucu verecek
+şekilde altın oran aramasıyla buldum: T = 0,72. T'nin 1'den küçük çıkması, sınıf ağırlıkları ve
+düzenlileştirme yüzünden modelin olduğundan çekingen olduğunu ve olasılıkların biraz
+keskinleştirilmesi gerektiğini gösteriyor. Sonuçta kalibrasyon hatası (ECE) testte 0,022 çıktı.
 
-0,20 ile 0,90 arasındaki eşikler, doğrulama seti ile `ood_val` birlikte kullanılarak
-denenir. Eşiğin altında kalan tahmin "Diğer" sayılır ve 9 genel konu üzerinden macro F1
-hesaplanır. En iyi eşik 0,60 çıktı (macro F1 0,782; 0,20'de 0,752, 0,90'da 0,739).
+### 6.5 Güven eşiği
 
-### 5.6 Metrikler
+0,20 ile 0,90 arasındaki eşikleri denedim. Eşik düşük olursa model tanımadığı konulara da konu
+atıyor: 0,20 eşiğinde "Merhaba" yazınca %37 ile Kitaplar diyordu. Eşik yüksek olursa doğru
+konuları da "Belirsiz" sayıyor. Eşiği, doğrulama seti ile modelin hiç görmediği konuları
+birlikte kullanarak seçtim:
 
-Doğruluk, sınıf bazında precision / recall / F1, macro ve ağırlıklı F1, karmaşıklık matrisi
-ve 15 aralıklı beklenen kalibrasyon hatası (ECE) `src/ml/metrics.py` içinde hesaplanır.
+| Eşik | 0,20 | 0,40 | 0,50 | **0,60** | 0,70 | 0,80 | 0,90 |
+|---|---|---|---|---|---|---|---|
+| Macro F1 | 0,752 | 0,766 | 0,774 | **0,782** | 0,778 | 0,770 | 0,739 |
 
-## 6. Eğitim süreci ve model seçimi
+Artık "Merhaba" ve "bugün hava çok güzel" gibi girdilere konu atamıyor.
+
+### 6.6 Metrikler
+
+Doğruluk, her sınıf için precision / recall / F1, macro F1, karmaşıklık matrisi ve kalibrasyon
+hatasını (ECE) kendim hesapladım. "Diğer" sınıfı çok büyük olduğu için başarıyı doğruluk
+yerine macro F1 ile ölçtüm. Macro F1 her konuya eşit ağırlık veriyor; yalnızca "Diğer" demeyi
+öğrenen bir model yüksek doğruluk alabilir ama macro F1'i düşük çıkar.
+
+## 7. Eğitim süreci ve model seçimi
 
 | Aşama | Sonuç |
 |---|---|
 | Naive Bayes, doğrulama macro F1 | 0,833 |
-| Softmax regresyon, doğrulama macro F1 | 0,854 (en iyi epoch: 9) |
+| Softmax regresyon, doğrulama macro F1 | **0,854** (en iyi tur: 9) |
 | Seçilen model | Softmax regresyon |
 | Sıcaklık (T) | 0,717 |
 | Güven eşiği | 0,60 |
-| Son eğitim | Eğitim + doğrulama verisi, 9 epoch |
+| Son eğitim | Eğitim + doğrulama verisi birlikte, 9 tur |
 | Toplam süre (2 çekirdekli CPU) | yaklaşık 55 saniye |
 
-Softmax regresyonun epoch'lara göre doğrulama macro F1 değerleri: 0,710, 0,824, 0,842, 0,848,
-0,848, 0,850, 0,852, 0,850, **0,854**, 0,852, 0,851, 0,852.
+Softmax regresyonun turlara göre doğrulama macro F1 değerleri:
 
-Model iki dosya olarak kaydedilir: ağırlıklar `models/topic_model.npz`, sözlük ve ayarlar
-`models/topic_model.json`. Yüklemede `pickle` kullanılmaz (`allow_pickle=False`), bu nedenle
-model dosyası kod çalıştıramaz.
+| Tur | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | **9** | 10 | 11 | 12 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| F1 | 0,710 | 0,824 | 0,842 | 0,848 | 0,848 | 0,850 | 0,852 | 0,850 | **0,854** | 0,852 | 0,851 | 0,852 |
 
-## 7. Sohbet konusu ve arama sorgusu
+9. turdan sonra 3 tur boyunca iyileşme olmadığı için eğitim 12. turda durdu. Seçimleri
+bitirdikten sonra modeli eğitim ve doğrulama verisinin toplamıyla aynı ayarlarla 9 tur yeniden
+eğittim, çünkü daha fazla örnek daha iyi model demek.
 
-Her genel konu için `skor = eski_skor · 0,7 + yeni_olasılık` hesaplanır. Toplam içindeki payı
-%15'i geçen en fazla 3 konu sohbetin genel konusunu oluşturur. %15, üç konulu bir sohbette iki
-mesaj önce konuşulan konunun (ağırlığı yaklaşık 0,49'a inmiş) hâlâ temada kalabilmesi için
-seçildi.
+Modeli iki dosya olarak kaydediyorum: ağırlıklar `models/topic_model.npz`, sözlük ve ayarlar
+`models/topic_model.json`. `pickle` kullanmadım, çünkü pickle dosyası açılırken kod
+çalıştırabilir. Aynı veri ve aynı rastgelelik tohumuyla eğitim her seferinde birebir aynı
+modeli üretiyor; bunu ağırlıkların SHA-256 özetini karşılaştırarak doğruladım.
 
-Tema ifadesi konuların rolüne göre kurulur: Kitaplar "ortam", Bilim "niteleyici", diğerleri
-"alan" konusudur:
+## 8. Sohbet konusu ve arama sorgusu
+
+Her mesajdan sonra her genel konu için skoru şöyle güncelliyorum:
+
+    yeni skor = eski skor × 0,7 + bu mesajdaki olasılık
+
+Son mesaj en etkili; bir önceki 0,7, ondan önceki 0,49 ağırlıkla katkı veriyor. Toplam içindeki
+payı %15'i geçen en fazla 3 konu sohbetin genel konusunu oluşturuyor. Ödevdeki 1. senaryoda
+gerçek değerler şöyle:
+
+| Mesaj | Mesajın konusu | Sohbet skorları | Paylar | Tema |
+|---|---|---|---|---|
+| Kitaplar hakkında konuşalım. | Kitaplar (%79) | Kitaplar 0,79 | Kitaplar %87 | kitaplar |
+| Bilim ile ilgili neler var? | Bilim (%91) | Bilim 0,92, Kitaplar 0,56 | Bilim %57, Kitaplar %35 | bilimsel kitaplar |
+| Biyoloji hakkında ne önerirsin? | Biyoloji (%60) | Bilim 0,67, Biyoloji 0,61, Kitaplar 0,41 | Bilim %32, Biyoloji %29, Kitaplar %19 | biyoloji hakkında bilimsel kitaplar |
+
+Kitaplar skorunun 0,79 → 0,56 → 0,41 şeklinde yavaşça azaldığı görülüyor. İlk denememde eşik
+%20 idi; üçüncü mesajda Kitaplar'ın payı %19'a düştüğü için temadan çıkıyordu. Eşiği %15'e
+indirdim, çünkü 0,7 azalma katsayısıyla iki mesaj önce konuşulan bir konunun payı üç konulu bir
+sohbette tam bu aralığa düşüyor.
+
+Tema cümlesini konuların rolüne göre kuruyorum. Kitaplar içeriğin türü (cümlenin başı), Bilim
+niteleyici (sıfat olur), diğerleri alan konusu. Bu kurallar ödevdeki örneklere özel değil, her
+konu birleşimi için çalışıyor:
 
 * Kitaplar → "kitaplar"
 * Kitaplar + Bilim → "bilimsel kitaplar"
 * Kitaplar + Bilim + Biyoloji → "biyoloji hakkında bilimsel kitaplar"
-* Tarih + Kitaplar → "tarih kitapları"
+* Kitaplar + Tarih → "tarih kitapları"
+* Bilim + Biyoloji → "biyoloji alanında bilimsel araştırmalar"
 
-Sohbet tek bir konuya odaklanmışsa ve bir alt konu baskınsa tema alt konuya daralır ("kuantum
-bilgisayarlar"). Arama sorgusu tema ifadesidir; tema kısaysa son mesajdan modelde yüksek
-ağırlığa sahip en fazla 2 sözcük eklenir. Çekimli fiiller eklenmez; geçmiş zaman eki Türkçe
-ünsüz uyumuna göre kontrol edilir ("kuantum" fiil sanılmaz, "kaptım" elenir).
+Sohbet tek bir konudaysa ve bir alt konu baskınsa tema alt konuya daralıyor: "Kuantum
+bilgisayarlar nasıl çalışır?" → tema "kuantum bilgisayarlar". Arama sorgusu tema ifadesinden
+oluşuyor. Tema kısaysa son mesajdan modelde yüksek ağırlığa sahip en fazla 2 sözcük ekliyorum.
+Çekimli fiilleri eklemiyorum. Başta "kuantum" sözcüğü "-tum" ile bittiği için geçmiş zaman
+fiili sanılıyordu ("tuttum" gibi). Türkçe ünsüz uyumuna göre "-tı" eki yalnızca sert
+ünsüzden sonra gelebildiği için kuralı buna göre düzelttim.
 
-## 8. İnternet araması ve veritabanı
+## 9. İnternet araması ve veritabanı
 
-* Arama önce Türkçe Wikipedia API'sinde yapılır, sonuç yoksa DuckDuckGo denenir. Zaman aşımı,
-  yeniden deneme, `Retry-After` desteği ve yalnızca bu iki alan adına ait bağlantıları kabul
-  eden filtre vardır. Bağlantı yoksa 120 saniye boyunca yeniden denenmez; sınıflandırma ve kayıt
-  devam eder.
-* Aynı sorgu 24 saat boyunca veritabanındaki önbellekten cevaplanır.
-* SQLite tabloları: `metinler`, `sohbet_konulari`, `arama_sonuclari`, `sessions`,
-  `model_metadata`, `search_cache`. Yabancı anahtarlar, indeksler, parametreli sorgular ve
-  `PRAGMA user_version` ile şema sürümü kullanılır.
+* Aramayı önce Türkçe Wikipedia API'sinde yapıyorum; sonuç çıkmazsa DuckDuckGo'yu deniyorum.
+  İkisi de API anahtarı istemiyor, bu yüzden projede gizli bilgi yok.
+* Sunucu cevap vermezse 6 saniye sonra vazgeçiyorum. Geçici hatalarda (429, 5xx) biraz
+  bekleyip tekrar deniyorum. Yalnızca wikipedia.org ve duckduckgo.com adreslerinden gelen
+  bağlantıları kabul ediyorum.
+* İnternet yoksa sınıflandırma ve kayıt devam ediyor, kullanıcıya "İnternete erişilemedi"
+  yazılıyor. Her mesajda zaman aşımı beklenmesin diye 2 dakika boyunca tekrar denemiyorum.
+* Aynı sorgu 24 saat içinde tekrar sorulursa sonuçları veritabanındaki önbellekten
+  getiriyorum.
 
-## 9. Sonuçlar
+Veritabanı tabloları ve 1. senaryodaki bir mesajın kayıtları:
 
-Test seti yalnızca bir kez, tüm seçimler bittikten sonra ölçüldü.
+| Tablo | Ne tutuyor | Örnek |
+|---|---|---|
+| `metinler` | Mesaj, genel konu, güven, alt konular, tüm olasılıklar | "Bilim ile ilgili neler var?", Bilim, 0,915 |
+| `sohbet_konulari` | Mesajdan sonraki sohbet konusu ve sorgu | "Bilim + Kitaplar", "bilimsel kitaplar" |
+| `arama_sonuclari` | İnternetten gelen başlık, özet, bağlantı ve sıra | Wikipedia sonuçları |
+| `sessions` | Her sohbet oturumu | `sıfırla` komutu yeni oturum açar |
+| `model_metadata` | Kayıtları üreten modelin sürümü ve metrikleri | v2.0.0, softmax_regression |
+| `search_cache` | Önbellek | 24 saatlik sonuçlar |
 
-### 9.1 Genel ölçümler
+Tablolar arasında yabancı anahtarlar var; örneğin her arama sonucu kendi sohbet konusu
+kaydına, o da kendi mesajına bağlı. Tüm sorguları parametreli yazdım, böylece kullanıcının
+yazdığı metin hiçbir zaman doğrudan SQL'e eklenmiyor. Şema değişikliklerini sürüm numarasıyla
+yönetiyorum: eski bir veritabanı dosyası silinmeden otomatik güncelleniyor.
+
+## 10. Sonuçlar
+
+Test setini yalnızca bir kez, bütün seçimleri bitirdikten sonra ölçtüm.
+
+### 10.1 Genel ölçümler
 
 | Ölçüm | Değer |
 |---|---|
@@ -192,13 +340,13 @@ Test seti yalnızca bir kez, tüm seçimler bittikten sonra ölçüldü.
 | Macro F1 (eşiksiz) | 0,850 |
 | Doğruluk (eşikli / eşiksiz) | 0,882 / 0,898 |
 | Alt konu doğruluğu (genel konu doğruyken) | 0,931 |
-| ECE | 0,022 |
-| Görülmemiş konuları reddetme oranı | 0,884 |
+| Kalibrasyon hatası (ECE) | 0,022 |
+| Hiç görülmemiş konuları reddetme oranı | 0,884 |
 | Yalnızca kavram adı verildiğinde (1-3 sözcük) doğruluk / macro F1 | 0,621 / 0,544 |
-| Harici biyoloji / Osmanlı tarihi (eşiksiz) | 0,688 / 0,420 |
+| Harici biyoloji / Osmanlı tarihi cümleleri (eşiksiz) | 0,688 / 0,420 |
 | Tek metin tahmin süresi (medyan / %95) | 0,70 ms / 0,88 ms |
 
-### 9.2 Konu bazında (test, eşikli)
+### 10.2 Konu bazında (test, eşikli)
 
 | Konu | Precision | Recall | F1 | Örnek |
 |---|---|---|---|---|
@@ -212,12 +360,12 @@ Test seti yalnızca bir kez, tüm seçimler bittikten sonra ölçüldü.
 | Tarih | 0,907 | 0,774 | 0,835 | 190 |
 | Diğer | 0,866 | 0,953 | 0,907 | 1.930 |
 
-Eşik, recall'u bir miktar düşürüp precision'u artırır: model emin olmadığında konu iddia
-etmek yerine "Belirsiz" der.
+Precision'ın recall'dan yüksek olması eşiğin etkisi: model emin olmadığında yanlış konu
+söylemek yerine "Belirsiz" diyor.
 
-### 9.3 Ödev senaryoları ve kabul cümleleri
+### 10.3 Ödev senaryoları ve kabul cümleleri
 
-| Durum | Sonuç |
+| Girdi | Sonuç |
 |---|---|
 | Senaryo 1: "Kitaplar hakkında konuşalım." → "Bilim ile ilgili neler var?" → "Biyoloji hakkında ne önerirsin?" | Geçti. Temalar: "kitaplar", "bilimsel kitaplar", "biyoloji hakkında bilimsel kitaplar" |
 | Senaryo 2: "Kuantum bilgisayarlar nasıl çalışır?" → "Kuantum mekaniği neyi açıklar?" | Geçti. Teknoloji > Kuantum Bilgisayarlar, ardından Fizik > Kuantum Mekaniği |
@@ -225,44 +373,56 @@ etmek yerine "Belirsiz" der.
 | "Kuantum dolanıklıkta parçacıkların dalga fonksiyonları birlikte değişebilir." | Fizik > Kuantum Mekaniği (%100) |
 | "Kuantum işlemciler kübitler kullanarak belirli algoritmaları hızlandırabilir." | Teknoloji > Kuantum Bilgisayarlar (%99) |
 | "Kütüphaneden aldığım romanı okudum, yazarın anlatımı çok akıcıydı." | Kitaplar > Edebiyat, Roman ve Şiir (%99,6) |
-| "Bilim insanları hipotezlerini deney ve gözlem kullanarak test eder." | **Belirsiz** (en olası Bilim, %55 < 0,60) |
+| "Bilim insanları hipotezlerini deney ve gözlem kullanarak test eder." | **Belirsiz** (en olası Bilim, %55 < %60) |
 | "Hücreler DNA taşır ve canlılar evrim geçirerek çeşitlenir." | Biyoloji > Genetik (%86) |
+| "bugün hava çok güzel" | Taksonomi dışı (Diğer %80) |
 
-Bu durumlar `python proje.py --degerlendir` ile yeniden üretilebilir ve testlerde de
-denetlenir.
+Bu sonuçlar `python proje.py --degerlendir` komutuyla yeniden üretilebiliyor ve testlerde de
+kontrol ediliyor.
 
-## 10. Bilinen sınırlılıklar
+## 11. Karşılaştığım sorunlar ve çözümlerim
 
-1. **Bilim sınıfı zayıf.** Bu sınıf yalnızca bilim felsefesi ve yöntem kartlarından oluşur
+| Sorun | Neden | Çözüm |
+|---|---|---|
+| Naive Bayes macro F1 0,08 çıktı | α = 1, 200 bin özellikte gerçek sayımları bastırıyordu | α'yı doğrulama setinde denedim, 0,001 seçtim (0,833) |
+| "biyoloji" girdisi Teknoloji çıktı | Kategori adı Tabu kartlarında yasaklı sözcük; veride yok | Konu ve alt konu adlarını eğitim örneği olarak ekledim |
+| 3. mesajda "kitaplar" temadan düştü | Kitaplar'ın payı %19'a iniyordu, eşik %20 idi | Eşiği azalma katsayısına göre hesaplayıp %15 yaptım |
+| "Merhaba" Kitaplar olarak sınıflandı | Güven eşiği yalnızca bilinen konularla seçilince 0,20'ye düşüyordu | Eşiği modelin hiç görmediği konuları da katarak seçtim (0,60) |
+| "kuantum" sorgudan atılıyordu | "-tum" sonu geçmiş zaman eki sanılıyordu | Kuralı Türkçe ünsüz uyumuna göre düzelttim |
+| Test başarısı gerçekte olduğundan yüksek çıkabilirdi | Aynı kavramın kartları hem eğitimde hem testte olabilirdi | Terim gruplu bölme yaptım, sızıntıyı ölçüp 0 olduğunu gösterdim |
+
+## 12. Bilinen sınırlılıklar
+
+1. **Bilim sınıfı zayıf.** Bu sınıf yalnızca bilim felsefesi ve yöntem kartlarından oluşuyor
    (182 eğitim örneği). "Bilim insanları hipotez test eder" cümlesinde en olası konu doğru
-   (Bilim) olsa da güven eşiğin altında kalır ve sonuç "Belirsiz" olur. Sohbet takibi
-   olasılıkları eşikten bağımsız biriktirdiği için bu cümle yine de "bilimsel kitaplar"
-   temasına katkı verir.
+   (Bilim %55, ikinci Diğer %37) ama güven eşiğin altında kaldığı için sonuç "Belirsiz".
+   Sohbet takibi olasılıkları eşikten bağımsız biriktirdiği için bu cümle yine de "bilimsel
+   kitaplar" temasına katkı veriyor.
 2. **Farklı üslupta düşük başarı.** Model kısa tanım cümleleriyle eğitildiği için uzun
-   ansiklopedik paragraflarda başarı düşer (Osmanlı tarihi %42; yanlışların çoğu "Diğer").
-3. **Kısa girdiler.** Yalnızca bir kavram adı verildiğinde doğruluk 0,62'dir. Konu adlarının
-   kendisi (biyoloji, fizik, kuantum…) eğitim örneği olarak eklendiği için tanınır.
+   ansiklopedik paragraflarda başarı düşüyor (Osmanlı tarihi %42; yanlışların çoğu "Diğer").
+3. **Kısa girdiler.** Yalnızca bir kavram adı verildiğinde doğruluk 0,62. Konu adlarının
+   kendisi (biyoloji, fizik, kuantum…) eğitim örneği olarak eklendiği için tanınıyor.
 4. **Coğrafya gibi komşu konular.** Görülmemiş konulardan en çok coğrafya ve balıkçılık
-   metinleri yanlışlıkla bir konuya atanır (%21-32).
-5. **Alt konu çeşitliliği.** "Kitaplar hakkında konuşalım" gibi genel bir cümlede en olası alt
-   konu Çizgi Roman çıkar; alt konular listelendiği ve olasılıkları gösterildiği için kullanıcı
-   dağılımı görebilir.
-6. **Sorguda fiil kalması.** Geniş zaman fiilleri ("çalışır") filtrelenmez ve sorguya
-   eklenebilir.
-7. **İnternet.** Web araması Wikipedia/DuckDuckGo erişimine bağlıdır; bu ortamda canlı arama
-   testi çalıştırılamadı, arama katmanı sahte HTTP yanıtlarıyla test edildi.
+   metinleri yanlışlıkla bir konuya atanıyor (%21-32).
+5. **Genel cümlelerde alt konu.** "Kitaplar hakkında konuşalım" gibi genel bir cümlede en olası
+   alt konu Çizgi Roman çıkıyor. Birden fazla alt konu olasılıklarıyla birlikte listelendiği
+   için kullanıcı dağılımı görebiliyor.
+6. **Sorguda fiil kalması.** Geniş zaman fiilleri ("çalışır") filtrelenmiyor ve sorguya
+   eklenebiliyor.
+7. **İnternet.** Web araması Wikipedia/DuckDuckGo erişimine bağlı. Arama katmanını sahte HTTP
+   yanıtlarıyla test ettim; canlı test `NLP_NETWORK_TESTS=1` ile çalıştırılabiliyor.
 
-## 11. Testler
+## 13. Testler
 
-`python -m pytest`: 165 test geçer, canlı ağ testi atlanır (`NLP_NETWORK_TESTS=1` ile
-çalışır), 1 test bilinen sorun olarak işaretlidir (10.1). Testler kendi yazılan algoritmaları
-(TF-IDF formülü, Naive Bayes, softmax, sıcaklık, metrikler, gruplu bölme), veri hazırlamayı,
-modelin kaydedilip yüklenmesini, sohbet takibini, sorgu üretimini, web arama hata durumlarını,
-veritabanını ve konsol uygulamasının tamamını kapsar. `ruff` ve `mypy` hatasız geçer.
+`python -m pytest` ile 165 test geçiyor; canlı internet testi atlanıyor, 1 test bilinen sorun
+olarak işaretli (12.1). Testler kendi yazdığım algoritmaları (TF-IDF formülü, Naive Bayes,
+softmax, sıcaklık, metrikler, gruplu bölme), veri hazırlamayı, modelin kaydedilip yüklenmesini,
+sohbet takibini, sorgu üretimini, web aramasının hata durumlarını, veritabanını ve konsol
+uygulamasının tamamını kapsıyor. Kod `ruff` ve `mypy` kontrollerinden hatasız geçiyor.
 
-## 12. Geliştirme önerileri
+## 14. Geliştirme önerileri
 
-* Bilim ve Kitaplar sınıfları için bu konularda gerçek kullanıcı cümleleri toplamak.
-* Uzun paragraflar için cümle bazında tahmin edip olasılıkları birleştirmek.
-* Konu bazında ayrı güven eşiği seçmek (az örnekli sınıflarda daha düşük eşik).
+* Bilim ve Kitaplar sınıfları için gerçek kullanıcı cümleleri toplamak.
+* Uzun paragraflarda her cümleyi ayrı sınıflandırıp olasılıkları birleştirmek.
+* Her konu için ayrı güven eşiği seçmek (az örnekli sınıflarda daha düşük eşik).
 * Coğrafya gibi karışan konular için "Diğer" sınıfına daha çeşitli örnekler eklemek.
