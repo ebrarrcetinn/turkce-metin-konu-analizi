@@ -13,7 +13,6 @@ from src.preprocessing.text import (
     f5_preprocess,
     f5_stem,
     fix_mojibake,
-    is_meaningful,
     normalize,
     tokenize,
     turkish_lower,
@@ -71,12 +70,11 @@ def test_tokenize_and_stopwords():
 @pytest.mark.parametrize("text", ["", "   ", "ve bu da bir", "!!!", "12345", "... 42 ...",
                                   "😍🔥", "@kullanici https://x.com"])
 def test_not_meaningful(text):
-    assert not is_meaningful(text)
     assert content_tokens(text) == []
 
 
 def test_meaningful():
-    assert is_meaningful("Merhaba")
+    assert content_tokens("Merhaba") == ["merhaba"]
     assert content_tokens("Kübitler ve işlemciler") == ["kübitler", "işlemciler"]
 
 

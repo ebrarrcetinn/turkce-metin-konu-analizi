@@ -23,8 +23,10 @@ from src.config import RAW_DIR, USER_AGENT
 
 logger = logging.getLogger(__name__)
 
-DOWNLOAD_TIMEOUT = 60
+DOWNLOAD_TIMEOUT = 60  # saniye
 DOWNLOAD_RETRIES = 3
+# İndirilen her dosyanın adresi, özeti, lisansı ve indirme zamanı bu dosyaya yazılır; hangi
+# verinin hangi sürümüyle eğitildiği sonradan bilinebilir.
 PROVENANCE_FILE = "provenance.json"
 
 
@@ -34,6 +36,8 @@ class DataAcquisitionError(RuntimeError):
 
 @dataclass(frozen=True)
 class RemoteFile:
+    """İndirilecek tek dosya: adresi, yerel adı ve beklenen SHA-256 özeti."""
+
     url: str
     local_name: str
     sha256: str
@@ -41,6 +45,8 @@ class RemoteFile:
 
 @dataclass(frozen=True)
 class DataSource:
+    """Bir veri seti: kaynağı, lisansı, sabitlenmiş commit'i ve dosyaları."""
+
     key: str
     name: str
     homepage: str
@@ -50,13 +56,20 @@ class DataSource:
     files: tuple[RemoteFile, ...]
 
 
+# Dosyalar GitHub'ın ham dosya sunucusundan indirilir. Adreslerde dal adı ("main") yerine
+# commit kimliği kullanılır: veri seti sahibi dosyaları sonradan değiştirse bile her zaman
+# aynı sürüm indirilir ve sonuçlar tekrar üretilebilir kalır.
 _RAW = "https://raw.githubusercontent.com"
+# 1) Türkçe Tabu Veri Seti: 150 kategori, 37.278 kavram kartı ("kelime" + "aciklama").
+#    Eğitim, doğrulama ve testin tamamı buradan gelir.
 _TABOO_COMMIT = "f621b460f4511f2afb1a89f87b2d94af9440b09c"
-# data/*.json dosya adı -> SHA-256 (sabit commit üzerinden üretildi)
+# 150 dosyanın SHA-256 özetleri ayrı bir JSON dosyasında tutulur (data/*.json -> özet).
 _TABOO_MANIFEST: dict[str, str] = json.loads(
     (Path(__file__).with_name("taboo_manifest.json")).read_text(encoding="utf-8")
 )
+# 2) Turkish BQuAD: lise biyoloji ders kitabı paragrafları. Yalnızca harici test için.
 _BQUAD_COMMIT = "30a3e070e5eeb3ba04da89cac3a426eb858df032"
+# 3) Osmanlı tarihi okuma-anlama veri seti. Yalnızca harici test için.
 _OTTOMAN_COMMIT = "c6852f86f25e093ead13d8e2d0d87d92deadf727"
 _OTTOMAN_BASE = (
     "https://raw.githubusercontent.com/okanvk/"
@@ -127,15 +140,19 @@ SOURCES: tuple[DataSource, ...] = (
 
 
 def sha256_file(path: Path) -> str:
+    """Dosyanın SHA-256 özeti. Tek bir bayt bile değişse özet tamamen değişir; böylece
+    indirilen dosyanın bozuk veya farklı olmadığı kesin olarak anlaşılır."""
     digest = hashlib.sha256()
     with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1 << 16), b""):
+        for chunk in iter(lambda: handle.read(1 << 16), b""):  # 64 KB parçalar halinde
             digest.update(chunk)
     return digest.hexdigest()
 
 
 def _download(url: str, target: Path, retries: int = DOWNLOAD_RETRIES) -> None:
     target.parent.mkdir(parents=True, exist_ok=True)
+    # Önce geçici .part dosyasına yazılır, tamamlanınca asıl ada taşınır. İndirme yarıda
+    # kesilirse yarım dosya asıl dosya gibi görünüp sonraki çalıştırmada kullanılmaz.
     tmp = target.with_suffix(target.suffix + ".part")
     last_error: Exception | None = None
     for attempt in range(1, retries + 1):
@@ -152,7 +169,7 @@ def _download(url: str, target: Path, retries: int = DOWNLOAD_RETRIES) -> None:
         except (requests.RequestException, OSError) as exc:
             last_error = exc
             logger.warning("İndirme denemesi %d/%d başarısız: %s (%s)", attempt, retries, url, exc)
-            time.sleep(1.5 * attempt)
+            time.sleep(1.5 * attempt)  # her denemede biraz daha uzun beklenir
     tmp.unlink(missing_ok=True)
     raise DataAcquisitionError(f"İndirilemedi: {url}: {last_error}")
 
@@ -165,21 +182,22 @@ def fetch_all(raw_dir: Path = RAW_DIR, force: bool = False) -> dict[str, dict]:
         entries = []
         for remote in source.files:
             target = raw_dir / remote.local_name
+            # Hedef yolun data/raw dışına çıkmadığı denetlenir ("../" içeren adlara karşı).
             if raw_dir.resolve() not in target.resolve().parents:
                 raise DataAcquisitionError(f"Güvensiz hedef yol: {remote.local_name}")
+            # Dosya zaten varsa yeniden indirilmez; yalnızca özeti yeniden doğrulanır.
             if force or not target.exists():
                 logger.debug("İndiriliyor: %s", remote.url)
                 _download(remote.url, target)
             digest = sha256_file(target)
-            verified = remote.sha256 == digest
-            if not verified:
+            if digest != remote.sha256:
                 target.unlink(missing_ok=True)
                 raise DataAcquisitionError(
                     f"SHA-256 uyuşmazlığı: {remote.local_name} ({digest} != {remote.sha256})"
                 )
             entries.append(
                 {"url": remote.url, "file": remote.local_name, "sha256": digest,
-                 "sha256_verified": verified, "bytes": target.stat().st_size}
+                 "bytes": target.stat().st_size}
             )
         provenance[source.key] = {
             "name": source.name,

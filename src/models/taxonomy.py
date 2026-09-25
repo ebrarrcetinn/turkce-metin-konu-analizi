@@ -14,7 +14,11 @@ from typing import Final
 
 from src.config import OTHER_LABEL
 
-# kaynak kategori -> (genel konu, alt konu)
+# Tabu veri setindeki kategori adı -> (genel konu, alt konu).
+# Kategori adları veri setindeki dosya adlarıdır (ör. data/genetik.json -> "genetik").
+# Ödevdeki konular (Fizik, Kimya, Biyoloji, Teknoloji, Bilim, Kitaplar, Spor, Tarih) için
+# veri setinde birebir karşılığı olan 41 kategori seçildi ve her biri bir alt konuya bağlandı.
+# Aynı alt konuya birden fazla kategori gidebilir (kuşlar ve deniz canlıları -> Zooloji).
 CATEGORY_TO_TAXONOMY: Final[dict[str, tuple[str, str]]] = {
     # Fizik
     "kuantum": ("Fizik", "Kuantum Mekaniği"),
@@ -67,7 +71,9 @@ CATEGORY_TO_TAXONOMY: Final[dict[str, tuple[str, str]]] = {
     "epigrafi": ("Tarih", "Antik Çağ ve Arkeoloji"),
 }
 
-# Taksonomiyle anlamca örtüşen kategoriler; etiket gürültüsü yaratmamaları için dışlanır.
+# Taksonomiyle anlamca örtüşen 31 kategori tamamen dışlanır. Örneğin "anatomi" biyolojiye,
+# "jeoloji" bilime yakındır; bunlar "Diğer" olarak eğitilseydi model biyoloji metinlerine
+# "Diğer" demeyi öğrenirdi, bir konuya atansalardı da o konuyu fazla genişletirlerdi.
 EXCLUDED_CATEGORIES: Final[frozenset[str]] = frozenset(
     {
         "anatomi", "cerrahi", "dermatoloji", "farmakoloji", "immunoloji", "noroloji",
@@ -75,11 +81,14 @@ EXCLUDED_CATEGORIES: Final[frozenset[str]] = frozenset(
         "astronotik", "havacilik", "mekatronik", "jeoloji", "jeomorfoloji", "meteoroloji",
         "osinografi", "orman", "vahsidoga", "felsefe", "mantik", "mitoloji", "monarsi",
         "numizmatik", "tiyatro", "internethayati", "sosyalmedya", "videooyunlari", "kripto",
-        "dalgiclik", "cleanup-2026-09-07",
+        "dalgiclik",
     }
 )
 
-# "kuantum" kategorisindeki kuantum bilgisayar terimleri Teknoloji'ye taşınır.
+# Veri setinde ayrı bir "kuantum bilgisayar" kategorisi yok; hepsi "kuantum" kategorisinde.
+# Ödevdeki Fizik / Teknoloji ayrımını öğretebilmek için bu kategorideki kartlardan terimi
+# kuantum hesaplamaya ait olanlar (kübit, kuantum kapısı, transmon ...) Teknoloji > Kuantum
+# Bilgisayarlar olarak etiketlenir; kalanlar Fizik > Kuantum Mekaniği olarak kalır.
 QUANTUM_COMPUTING_TERM_RE = re.compile(
     r"kübit|qubit|kuantum (bilgisayar|işlemci|kapı|devre|algoritma|bellek|hata|hacmi|hızı|"
     r"üstünlüğü)|topolojik (kuantum )?bilgisayar|hadamard kapısı|cnot|pauli kapısı|"
@@ -88,6 +97,7 @@ QUANTUM_COMPUTING_TERM_RE = re.compile(
 )
 QUANTUM_COMPUTING = ("Teknoloji", "Kuantum Bilgisayarlar")
 
+# Ödevde istenen genel konular. Bunların dışındaki her şey OTHER_LABEL ("Diğer") olur.
 GENERAL_TOPICS: Final[tuple[str, ...]] = (
     "Fizik", "Kimya", "Biyoloji", "Teknoloji", "Bilim", "Kitaplar", "Spor", "Tarih",
 )
@@ -101,14 +111,18 @@ def map_card(category: str, term: str) -> tuple[str, str | None] | None:
     """
     if category in EXCLUDED_CATEGORIES:
         return None
+    # Kuantum kontrolü genel eşlemeden önce yapılır, çünkü "kuantum" eşlemede Fizik'e gider.
     if category == "kuantum" and QUANTUM_COMPUTING_TERM_RE.search(term):
         return QUANTUM_COMPUTING
     if category in CATEGORY_TO_TAXONOMY:
         return CATEGORY_TO_TAXONOMY[category]
+    # Eşlenmemiş ve dışlanmamış her kategori (yemek, müzik, coğrafya ...) "Diğer" örneğidir;
+    # modele taksonomi dışı metinleri tanımayı öğretir.
     return (OTHER_LABEL, None)
 
 
 def subtopics_of(general: str) -> list[str]:
+    """Bir genel konunun alt konuları, eşleme tablosundan türetilir (tek bilgi kaynağı)."""
     subs = {sub for gen, sub in CATEGORY_TO_TAXONOMY.values() if gen == general}
     if general == QUANTUM_COMPUTING[0]:
         subs.add(QUANTUM_COMPUTING[1])

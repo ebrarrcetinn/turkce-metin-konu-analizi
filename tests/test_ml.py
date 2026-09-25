@@ -52,7 +52,7 @@ def test_combined_vectorizer_stacks_features():
     combined = CombinedVectorizer([TfidfVectorizer("word"), TfidfVectorizer("char", (2, 2))])
     matrix = combined.fit_transform(DOCS)
     assert matrix.shape == (4, combined.n_features)
-    assert combined.feature_offset(1) == len(combined.vectorizers[0].vocabulary)
+    assert combined.n_features == sum(len(v.vocabulary) for v in combined.vectorizers)
 
 
 def _toy_problem():
