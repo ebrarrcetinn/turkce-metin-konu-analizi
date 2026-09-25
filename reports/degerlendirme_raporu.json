@@ -1,0 +1,370 @@
+{
+  "model": {
+    "model_name": "turkce-konu-softmax_regression",
+    "model_version": "2.0.0",
+    "algorithm": "softmax_regression",
+    "training_timestamp": "2026-09-25T18:19:35+00:00",
+    "thresholds": {
+      "min_confidence": 0.6,
+      "temperature": 0.7166
+    }
+  },
+  "test": {
+    "thresholded": {
+      "n": 3479,
+      "accuracy": 0.8822,
+      "precision_macro": 0.8797,
+      "recall_macro": 0.7882,
+      "macro_f1": 0.8297,
+      "weighted_f1": 0.8801
+    },
+    "argmax": {
+      "n": 3479,
+      "accuracy": 0.8982,
+      "precision_macro": 0.857,
+      "recall_macro": 0.8435,
+      "macro_f1": 0.8496,
+      "weighted_f1": 0.8979
+    },
+    "per_class": {
+      "Fizik": {
+        "precision": 0.8982,
+        "recall": 0.8108,
+        "f1": 0.8523,
+        "support": 185
+      },
+      "Kimya": {
+        "precision": 0.873,
+        "recall": 0.7051,
+        "f1": 0.7801,
+        "support": 78
+      },
+      "Biyoloji": {
+        "precision": 0.9121,
+        "recall": 0.8272,
+        "f1": 0.8676,
+        "support": 301
+      },
+      "Teknoloji": {
+        "precision": 0.8918,
+        "recall": 0.7601,
+        "f1": 0.8207,
+        "support": 271
+      },
+      "Bilim": {
+        "precision": 0.7647,
+        "recall": 0.7222,
+        "f1": 0.7429,
+        "support": 36
+      },
+      "Kitaplar": {
+        "precision": 0.8305,
+        "recall": 0.6622,
+        "f1": 0.7368,
+        "support": 148
+      },
+      "Spor": {
+        "precision": 0.9739,
+        "recall": 0.8794,
+        "f1": 0.9243,
+        "support": 340
+      },
+      "Tarih": {
+        "precision": 0.9074,
+        "recall": 0.7737,
+        "f1": 0.8352,
+        "support": 190
+      },
+      "Diğer": {
+        "precision": 0.8658,
+        "recall": 0.9528,
+        "f1": 0.9073,
+        "support": 1930
+      }
+    },
+    "confusion_matrix": {
+      "labels": [
+        "Fizik",
+        "Kimya",
+        "Biyoloji",
+        "Teknoloji",
+        "Bilim",
+        "Kitaplar",
+        "Spor",
+        "Tarih",
+        "Diğer"
+      ],
+      "matrix": [
+        [
+          150,
+          2,
+          2,
+          5,
+          0,
+          0,
+          0,
+          0,
+          26
+        ],
+        [
+          2,
+          55,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          19
+        ],
+        [
+          3,
+          0,
+          249,
+          1,
+          0,
+          0,
+          2,
+          1,
+          45
+        ],
+        [
+          6,
+          2,
+          0,
+          206,
+          0,
+          0,
+          0,
+          0,
+          57
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          26,
+          0,
+          0,
+          0,
+          10
+        ],
+        [
+          0,
+          0,
+          2,
+          0,
+          0,
+          98,
+          0,
+          1,
+          47
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          299,
+          0,
+          41
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          0,
+          2,
+          0,
+          147,
+          40
+        ],
+        [
+          6,
+          4,
+          18,
+          18,
+          8,
+          18,
+          6,
+          13,
+          1839
+        ]
+      ]
+    },
+    "subtopic_accuracy": 0.9307,
+    "ece_15bin": 0.0218,
+    "status_counts": {
+      "out_of_scope": 1964,
+      "ok": 1355,
+      "uncertain": 160
+    }
+  },
+  "short_inputs": {
+    "accuracy": 0.6206,
+    "macro_f1": 0.5436
+  },
+  "ood_unseen": {
+    "n": 3275,
+    "rejected_rate": 0.8843,
+    "status_counts": {
+      "out_of_scope": 2583,
+      "uncertain": 313,
+      "ok": 379
+    },
+    "worst_categories_false_accept": {
+      "turkiyecografyasi": 0.32,
+      "balikcilik": 0.31,
+      "dunyacografyasi": 0.213,
+      "kaligrafi": 0.144,
+      "hobiler": 0.14,
+      "kutugoyunlari": 0.115
+    }
+  },
+  "external": {
+    "bquad": {
+      "n": 400,
+      "target": "Biyoloji",
+      "recall_argmax": 0.6875,
+      "recall_with_threshold": 0.5725,
+      "argmax_distribution": {
+        "Biyoloji": 275,
+        "Diğer": 60,
+        "Kimya": 16,
+        "Fizik": 22,
+        "Spor": 11,
+        "Teknoloji": 14,
+        "Bilim": 1,
+        "Kitaplar": 1
+      }
+    },
+    "ottoman": {
+      "n": 400,
+      "target": "Tarih",
+      "recall_argmax": 0.42,
+      "recall_with_threshold": 0.3,
+      "argmax_distribution": {
+        "Diğer": 217,
+        "Tarih": 168,
+        "Biyoloji": 2,
+        "Spor": 8,
+        "Fizik": 2,
+        "Kitaplar": 3
+      }
+    }
+  },
+  "sentence_tests": [
+    {
+      "text": "Kuantum dolanıklıkta parçacıkların dalga fonksiyonları birlikte değişebilir.",
+      "expected": "Fizik > Kuantum Mekaniği",
+      "actual": "Fizik > Kuantum Mekaniği",
+      "confidence": 0.9998,
+      "pass": true
+    },
+    {
+      "text": "Kuantum işlemciler kübitler kullanarak belirli algoritmaları hızlandırabilir.",
+      "expected": "Teknoloji > Kuantum Bilgisayarlar",
+      "actual": "Teknoloji > Kuantum Bilgisayarlar",
+      "confidence": 0.9942,
+      "pass": true
+    },
+    {
+      "text": "Kütüphaneden aldığım romanı okudum, yazarın anlatımı çok akıcıydı.",
+      "expected": "Kitaplar",
+      "actual": "Kitaplar > Edebiyat, Roman ve Şiir",
+      "confidence": 0.9964,
+      "pass": true
+    },
+    {
+      "text": "Bilim insanları hipotezlerini deney ve gözlem kullanarak test eder.",
+      "expected": "Bilim",
+      "actual": "Belirsiz",
+      "confidence": 0.5465,
+      "pass": false
+    },
+    {
+      "text": "Hücreler DNA taşır ve canlılar evrim geçirerek çeşitlenir.",
+      "expected": "Biyoloji",
+      "actual": "Biyoloji > Genetik",
+      "confidence": 0.8579,
+      "pass": true
+    }
+  ],
+  "conversation_scenarios": [
+    {
+      "name": "Senaryo 1: kitaplar → bilim → biyoloji",
+      "turns": [
+        {
+          "message": "Kitaplar hakkında konuşalım.",
+          "general": "Kitaplar",
+          "subtopics": [
+            "Çizgi Roman",
+            "Edebiyat, Roman ve Şiir",
+            "Masallar"
+          ],
+          "theme": "Kitaplar",
+          "phrase": "kitaplar",
+          "query": "kitaplar"
+        },
+        {
+          "message": "Bilim ile ilgili neler var?",
+          "general": "Bilim",
+          "subtopics": [
+            "Bilim Felsefesi ve Yöntem"
+          ],
+          "theme": "Bilim + Kitaplar",
+          "phrase": "bilimsel kitaplar",
+          "query": "bilimsel kitaplar"
+        },
+        {
+          "message": "Biyoloji hakkında ne önerirsin?",
+          "general": "Biyoloji",
+          "subtopics": [
+            "Genetik",
+            "Ekoloji",
+            "Botanik"
+          ],
+          "theme": "Bilim + Biyoloji + Kitaplar",
+          "phrase": "biyoloji hakkında bilimsel kitaplar",
+          "query": "biyoloji hakkında bilimsel kitaplar"
+        }
+      ],
+      "pass": true
+    },
+    {
+      "name": "Senaryo 2: kuantum",
+      "turns": [
+        {
+          "message": "Kuantum bilgisayarlar nasıl çalışır?",
+          "general": "Teknoloji",
+          "subtopics": [
+            "Kuantum Bilgisayarlar"
+          ],
+          "theme": "Teknoloji > Kuantum Bilgisayarlar",
+          "phrase": "kuantum bilgisayarlar",
+          "query": "kuantum bilgisayarlar çalışır"
+        },
+        {
+          "message": "Kuantum mekaniği neyi açıklar?",
+          "general": "Fizik",
+          "subtopics": [
+            "Kuantum Mekaniği"
+          ],
+          "theme": "Fizik + Teknoloji",
+          "phrase": "fizik ve teknoloji",
+          "query": "fizik teknoloji mekaniği"
+        }
+      ],
+      "pass": true
+    }
+  ],
+  "latency": {
+    "n": 300,
+    "median_ms": 0.695,
+    "p95_ms": 0.879
+  }
+}
