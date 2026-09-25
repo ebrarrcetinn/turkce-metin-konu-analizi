@@ -356,7 +356,7 @@
           ],
           "theme": "Fizik + Teknoloji",
           "phrase": "fizik ve teknoloji",
-          "query": "fizik teknoloji mekaniği"
+          "query": "fizik teknoloji kuantum mekaniği"
         }
       ],
       "pass": true
@@ -364,7 +364,7 @@
   ],
   "latency": {
     "n": 300,
-    "median_ms": 0.695,
-    "p95_ms": 0.879
+    "median_ms": 0.762,
+    "p95_ms": 0.927
   }
 }
