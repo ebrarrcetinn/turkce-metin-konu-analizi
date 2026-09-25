@@ -207,8 +207,8 @@ def test_model_preparer_trains_when_model_missing(tmp_path, monkeypatch):
             processed.mkdir()
 
     class FakeTrainer:
-        report = {"algorithm": "softmax_regression",
-                  "metrics": {"val_thresholded": {"macro_f1": 0.8}}}
+        report = {"algorithm": "softmax_regression", "thresholds": {"min_confidence": 0.6},
+                  "metrics": {"val_macro_f1_naive_bayes": 0.8, "val_macro_f1_softmax": 0.85}}
 
         def __init__(self, processed_dir, model_path):
             calls.append("train")

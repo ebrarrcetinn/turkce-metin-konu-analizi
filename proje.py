@@ -80,8 +80,11 @@ class ModelPreparer:
         trainer = Trainer(processed_dir=self.processed_dir, model_path=self.model_path)
         model = trainer.run()
         metrics = trainer.report["metrics"]
-        print(f"Eğitim bitti: {trainer.report['algorithm']} seçildi (doğrulama macro F1 "
-              f"{metrics['val_thresholded']['macro_f1']:.3f}).", file=self.out)
+        print(f"Eğitim bitti. Doğrulama macro F1: Naive Bayes "
+              f"{metrics['val_macro_f1_naive_bayes']:.3f}, softmax regresyon "
+              f"{metrics['val_macro_f1_softmax']:.3f}; seçilen: {trainer.report['algorithm']}, "
+              f"güven eşiği {trainer.report['thresholds']['min_confidence']:.2f}.",
+              file=self.out)
         return model
 
 
