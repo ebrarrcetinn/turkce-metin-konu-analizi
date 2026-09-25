@@ -1,0 +1,8 @@
+-r requirements.txt
+# Test / kalite
+pytest==9.0.3
+ruff==0.8.6
+mypy==1.14.1
+# Yalnızca deney E12 (fastText karşılaştırması) için; uygulama çalışma zamanında gerekmez
+fasttext-wheel==0.9.2
+types-requests==2.32.4.20250913
