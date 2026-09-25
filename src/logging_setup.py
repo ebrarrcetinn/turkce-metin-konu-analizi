@@ -14,14 +14,17 @@ import sys
 
 from src.config import LOG_DIR, LOG_LEVEL
 
+# Örnek satır: 2026-09-27 10:15:02 INFO src.models.trainer: Özellik sayısı: 196785
 _FORMAT = "%(asctime)s %(levelname)s %(name)s: %(message)s"
 
 
 def setup_logging(level: str | None = None, to_file: bool = False) -> None:
     """Konsola (varsayılan WARNING) ve isteğe bağlı olarak logs/app.log dosyasına (INFO) yazar."""
     root = logging.getLogger()
-    if root.handlers:
+    if root.handlers:  # iki kez çağrılırsa aynı satırlar iki kez yazılmasın
         return
+    # Kök logger her şeyi geçirir; asıl filtreleme her çıkışın (konsol, dosya) kendi
+    # seviyesinde yapılır. Böylece konsol sade kalırken dosyada ayrıntı tutulur.
     root.setLevel(logging.DEBUG)
     console = logging.StreamHandler(sys.stderr)
     console.setLevel(getattr(logging, (level or LOG_LEVEL).upper(), logging.WARNING))

@@ -254,7 +254,7 @@ denetlenir.
 
 ## 11. Testler
 
-`python -m pytest`: 164 test geçer, canlı ağ testi atlanır (`NLP_NETWORK_TESTS=1` ile
+`python -m pytest`: 165 test geçer, canlı ağ testi atlanır (`NLP_NETWORK_TESTS=1` ile
 çalışır), 1 test bilinen sorun olarak işaretlidir (10.1). Testler kendi yazılan algoritmaları
 (TF-IDF formülü, Naive Bayes, softmax, sıcaklık, metrikler, gruplu bölme), veri hazırlamayı,
 modelin kaydedilip yüklenmesini, sohbet takibini, sorgu üretimini, web arama hata durumlarını,

@@ -182,7 +182,7 @@ sınırlılıklar [docs/RAPOR.md](docs/RAPOR.md) içinde anlatılmıştır.
 
 ```bash
 pip install -r requirements-dev.txt
-python -m pytest            # 164 geçer, 1 canlı ağ testi atlanır, 1 bilinen sorun (xfail)
+python -m pytest            # 165 geçer, 1 canlı ağ testi atlanır, 1 bilinen sorun (xfail)
 python -m ruff check .
 python -m mypy src proje.py
 ```

@@ -15,7 +15,14 @@ import numpy as np
 
 
 class ClassificationReport:
-    """Doğruluk, sınıf bazında precision/recall/F1 ve karmaşıklık matrisini hesaplar."""
+    """Doğruluk, sınıf bazında precision/recall/F1 ve karmaşıklık matrisini hesaplar.
+
+    precision: modelin "X" dediklerinin ne kadarı gerçekten X
+    recall   : gerçekten X olanların ne kadarını model X olarak buldu
+    F1       : ikisinin harmonik ortalaması; biri düşükse F1 de düşer
+    macro F1 : sınıfların F1 ortalaması; her sınıf eşit önemde sayılır. Veride "Diğer"
+               sınıfı çok büyük olduğundan başarıyı doğruluk yerine bununla ölçüyoruz.
+    """
 
     def __init__(self, y_true: Sequence[str], y_pred: Sequence[str],
                  labels: Sequence[str] | None = None):
@@ -24,6 +31,7 @@ class ClassificationReport:
         self.labels = list(labels) if labels is not None else sorted(set(y_true) | set(y_pred))
         index = {label: i for i, label in enumerate(self.labels)}
         size = len(self.labels)
+        # Karmaşıklık matrisi: satır gerçek sınıf, sütun tahmin; [i][j] = i olup j denenler.
         self.confusion = np.zeros((size, size), dtype=int)
         for true, pred in zip(y_true, y_pred, strict=True):
             if true in index and pred in index:
@@ -32,7 +40,8 @@ class ClassificationReport:
         correct = sum(t == p for t, p in zip(y_true, y_pred, strict=True))
         self.accuracy = correct / self.n if self.n else 0.0
 
-        # Satırlar gerçek, sütunlar tahmin: köşegen doğru tahminlerdir.
+        # Köşegen doğru tahminlerdir (true positive). Sütun toplamı o sınıfa verilen tahmin
+        # sayısı, satır toplamı o sınıfın gerçek örnek sayısıdır (support).
         true_positive = np.diag(self.confusion).astype(float)
         predicted = self.confusion.sum(axis=0).astype(float)
         support = self.confusion.sum(axis=1).astype(float)
@@ -47,6 +56,7 @@ class ClassificationReport:
 
     @property
     def weighted_f1(self) -> float:
+        """Örnek sayısıyla ağırlıklı F1; büyük sınıflar daha çok etki eder."""
         total = self.support.sum()
         return float((self.f1 * self.support).sum() / total) if total else 0.0
 
@@ -71,13 +81,19 @@ class ClassificationReport:
 
 
 def _safe_divide(numerator: np.ndarray, denominator: np.ndarray) -> np.ndarray:
+    """Payda 0 olan yerlerde (ör. hiç tahmin edilmemiş sınıf) sonucu 0 kabul eder."""
     result = np.zeros_like(numerator, dtype=float)
     np.divide(numerator, denominator, out=result, where=denominator > 0)
     return result
 
 
 def expected_calibration_error(confidences, correct, n_bins: int = 15) -> float:
-    """Güven aralıklarındaki |doğruluk - ortalama güven| farklarının ağırlıklı ortalaması."""
+    """Beklenen kalibrasyon hatası (ECE): modelin güveni gerçek doğruluğuyla ne kadar uyumlu.
+
+    Tahminler güven değerine göre 15 aralığa (0-0,067, 0,067-0,133, ...) ayrılır. Her aralıkta
+    |doğruluk - ortalama güven| farkı alınır ve aralıktaki örnek oranıyla ağırlıklandırılır.
+    0 mükemmel uyum demektir.
+    """
     confidences = np.asarray(confidences, dtype=float)
     correct = np.asarray(correct, dtype=float)
     if confidences.size == 0:

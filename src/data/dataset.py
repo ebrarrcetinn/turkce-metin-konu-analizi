@@ -35,13 +35,17 @@ from src.preprocessing.text import normalize
 
 logger = logging.getLogger(__name__)
 
-EXPECTED_TABOO_CARDS = 37_278
+EXPECTED_TABOO_CARDS = 37_278  # veri setinin sabitlenen sürümündeki kart sayısı
+# Tabu JSON dosyalarındaki her kartta bulunması gereken alanlar. Diğer alanlar (id,
+# yasakli_kelimeler, zorluk) kullanılmaz; eğitim metni kavram + açıklamadır.
 REQUIRED_CARD_KEYS = ("kategori", "kelime", "aciklama")
-SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])\s+")
+SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])\s+")  # nokta/soru/ünlem sonrası boşluktan böl
+# Harici setteki cümleler, eğitim verisindeki kart uzunluğuna yakın tutulur.
 EXTERNAL_MIN_WORDS, EXTERNAL_MAX_WORDS = 6, 40
 EXTERNAL_SAMPLE_PER_SOURCE = 400
-NEAR_DUPLICATE_COSINE = 0.9
+NEAR_DUPLICATE_COSINE = 0.9  # bu benzerliğin üstündeki iki metin "neredeyse aynı" sayılır
 
+# Bir veri satırı. Anahtarlar: text, general, subtopic, category, term, group, source
 Record = dict[str, str | None]
 
 
@@ -66,12 +70,13 @@ class DatasetBuilder:
         self.stats: dict = {}
 
     def load_cards(self) -> list[Record]:
+        """data/raw/taboo/data/*.json dosyalarındaki tüm kartları okur ve alanlarını denetler."""
         data_dir = self.raw_dir / "taboo" / "data"
         paths = sorted(data_dir.glob("*.json"))
         if not paths:
             raise DatasetError(f"Tabu verisi bulunamadı: {data_dir}")
         cards: list[Record] = []
-        for path in paths:
+        for path in paths:  # her dosya bir kategori (ör. genetik.json)
             try:
                 payload = json.loads(path.read_text(encoding="utf-8"))
             except (UnicodeDecodeError, json.JSONDecodeError) as exc:
@@ -94,12 +99,14 @@ class DatasetBuilder:
         records: list[Record] = []
         excluded = 0
         for card in cards:
-            if not card["definition"]:
+            if not card["definition"]:  # açıklaması boş kart öğretici değildir
                 continue
             mapped = map_card(str(card["category"]), str(card["term"]))
             if mapped is None:
                 excluded += 1
                 continue
+            # Eğitim metni: kavram + açıklaması. Örnek: "kübit kuantum bilgisayarların temel
+            # bilgi birimi olan, 0 ve 1 durumlarını aynı anda taşıyabilen ..."
             text = f"{card['term']} {card['definition']}"
             records.append({"text": text, "general": mapped[0], "subtopic": mapped[1],
                             "category": card["category"], "term": card["term"],
@@ -128,6 +135,9 @@ class DatasetBuilder:
     def split(self, records: list[Record]) -> dict[str, list[Record]]:
         """Görülmemiş OOD kategorilerini ayırır, kalanı terim gruplu train/val/test'e böler."""
         rng = random.Random(self.seed)
+        # "Diğer" kategorilerinin bir kısmı rastgele seçilip eğitimden tamamen çıkarılır.
+        # Model bu konuları (ör. balıkçılık, kaligrafi) hiç görmez; testte bunlara konu
+        # iddia etmemesi beklenir.
         other_categories = sorted({str(r["category"]) for r in records
                                    if r["general"] == OTHER_LABEL})
         unseen: set[str] = set(rng.sample(other_categories,
@@ -138,11 +148,13 @@ class DatasetBuilder:
         ood = [r for r in records if r["category"] in unseen and r["group"] not in seen_groups]
 
         def holdout(rows: list[Record], fraction: float, seed: int):
+            # Tabakalama kategori üzerinden yapılır: her kategoriden orantılı örnek ayrılır.
             kept, held = grouped_stratified_split([str(r["category"]) for r in rows],
                                                   [str(r["group"]) for r in rows],
                                                   fraction, seed)
             return [rows[i] for i in kept], [rows[i] for i in held]
 
+        # Önce %15 test ayrılır, sonra kalan %85'ten tüm verinin %15'i kadar doğrulama.
         train_val, test = holdout(seen, TEST_SIZE, self.seed)
         train, val = holdout(train_val, VAL_SIZE / (1 - TEST_SIZE), self.seed + 1)
         # Görülmemiş kategorilerin yarısı güven eşiğini seçmek için (ood_val), diğer yarısı
@@ -157,7 +169,12 @@ class DatasetBuilder:
                 "ood_unseen": ood_test}
 
     def external(self) -> list[Record]:
-        """İnsan yazımı, farklı üsluptaki iki kaynaktan tek konulu cümle örnekleri."""
+        """İnsan yazımı, farklı üsluptaki iki kaynaktan tek konulu cümle örnekleri.
+
+        Tabu kartları kısa tanımlardır. Modelin ders kitabı / ansiklopedi üslubundaki
+        metinlerde nasıl davrandığını görmek için biyoloji ve Osmanlı tarihi paragraflarından
+        cümleler alınır. Bu set eğitimde hiç kullanılmaz.
+        """
         specs = [("bquad", sorted((self.raw_dir / "bquad").glob("*.json")), "Biyoloji", None),
                  ("ottoman", sorted((self.raw_dir / "ottoman").rglob("*.json")), "Tarih",
                   "Osmanlı Tarihi")]
@@ -167,9 +184,12 @@ class DatasetBuilder:
             if not paths:
                 logger.warning("Harici kaynak bulunamadı: %s", source)
                 continue
+            # İki kaynak da SQuAD biçimindedir: data -> paragraphs -> context (paragraf metni).
             contexts = [paragraph["context"] for path in paths
                         for document in json.loads(path.read_text(encoding="utf-8"))["data"]
                         for paragraph in document["paragraphs"]]
+            # Paragraflar cümlelere bölünür; tekrarlar set ile atılır, sıralama tekrar
+            # üretilebilirlik içindir.
             sentences = sorted({s.strip() for c in contexts
                                 for s in SENTENCE_SPLIT_RE.split(c.replace("\n", " "))
                                 if EXTERNAL_MIN_WORDS <= len(s.split()) <= EXTERNAL_MAX_WORDS})
@@ -199,11 +219,13 @@ class DatasetBuilder:
         return rows
 
     def build(self) -> dict[str, list[Record]]:
+        """Tüm adımları çalıştırır ve her seti data/processed/<ad>.jsonl dosyasına yazar."""
         splits = self.split(self.clean(self.load_cards()))
         splits["train"] += self.taxonomy_seeds()
         splits["external"] = self.external()
         self.out_dir.mkdir(parents=True, exist_ok=True)
         for name, rows in splits.items():
+            # JSONL: her satır bir JSON kaydı; büyük dosyalar satır satır okunabilir.
             with (self.out_dir / f"{name}.jsonl").open("w", encoding="utf-8") as handle:
                 for row in rows:
                     handle.write(json.dumps(row, ensure_ascii=False) + "\n")
@@ -217,6 +239,11 @@ class DatasetBuilder:
 
 
 def leakage_report(splits: dict[str, list[Record]]) -> dict:
+    """Eğitim ile doğrulama/test arasında sızıntı olup olmadığını ölçer.
+
+    Ortak grup ve birebir aynı metin sayısı 0 olmalıdır; yakın kopya oranı da çok düşük
+    olmalıdır. Aksi halde test başarısı gerçekte olduğundan yüksek görünür.
+    """
     train = splits["train"]
     train_groups = {r["group"] for r in train}
     train_texts = {normalize(str(r["text"])) for r in train}
@@ -241,6 +268,8 @@ def near_duplicate_rate(reference: list[Record], query: list[Record],
     ref = vectorizer.fit_transform([str(r["text"]) for r in reference])
     qry = vectorizer.transform([str(r["text"]) for r in query])
     hits = 0
+    # Vektörler L2 normlu olduğu için iki vektörün çarpımı doğrudan kosinüs benzerliğidir.
+    # Bellek için sorgular 1000'lik parçalar halinde karşılaştırılır.
     for start in range(0, qry.shape[0], 1000):
         similarity = qry[start:start + 1000] @ ref.T
         hits += int((np.asarray(similarity.max(axis=1).todense()).ravel() >= threshold).sum())
@@ -248,6 +277,7 @@ def near_duplicate_rate(reference: list[Record], query: list[Record],
 
 
 def load_split(name: str, processed_dir: Path = PROCESSED_DIR) -> list[Record]:
+    """Hazırlanmış bir seti (train, val, test, ood_val, ood_unseen, external) okur."""
     path = processed_dir / f"{name}.jsonl"
     if not path.exists():
         raise DatasetError(f"{path} bulunamadı; önce veri seti hazırlanmalı.")

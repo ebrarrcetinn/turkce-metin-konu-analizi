@@ -36,15 +36,18 @@ logger = logging.getLogger(__name__)
 
 TAG_RE = re.compile(r"<[^>]+>")
 SPACE_RE = re.compile(r"\s+")
-MAX_SUMMARY_CHARS = 400
+MAX_SUMMARY_CHARS = 400  # konsolda ve veritabanında tutulan özet uzunluğu
 MAX_TITLE_CHARS = 150
+# Geçici hatalar: 429 (çok fazla istek), 5xx (sunucu hatası). Bunlarda tekrar denenir;
+# 404 gibi kalıcı hatalarda denenmez.
 RETRY_STATUS = {429, 500, 502, 503, 504}
-MAX_RETRY_AFTER_SECONDS = 5.0
+MAX_RETRY_AFTER_SECONDS = 5.0  # sunucu daha uzun beklememizi istese de kullanıcı bekletilmez
 
-STATUS_OK = "ok"
-STATUS_EMPTY = "empty"
-STATUS_OFFLINE = "offline"
-STATUS_ERROR = "error"
+# Arama sonucu durumları
+STATUS_OK = "ok"  # sonuç bulundu
+STATUS_EMPTY = "empty"  # arama yapıldı ama sonuç yok
+STATUS_OFFLINE = "offline"  # internete erişilemedi
+STATUS_ERROR = "error"  # diğer hatalar (bozuk yanıt, API hatası ...)
 
 
 class SearchError(RuntimeError):
@@ -57,6 +60,8 @@ class OfflineError(SearchError):
 
 @dataclass(frozen=True)
 class SearchResult:
+    """Tek bir arama sonucu; arama_sonuclari tablosuna bu alanlarla yazılır."""
+
     title: str
     summary: str
     url: str
@@ -68,6 +73,9 @@ class SearchResult:
 
 @dataclass
 class SearchOutcome:
+    """Bir aramanın bütün sonucu. Hata olsa bile istisna değil bu nesne döner; böylece arama
+    katmanındaki bir sorun sınıflandırma ve kayıt akışını durdurmaz."""
+
     query: str
     status: str
     results: list[SearchResult] = field(default_factory=list)
@@ -78,6 +86,8 @@ class SearchOutcome:
 
 
 class HttpSession(Protocol):
+    """requests.Session ile aynı `get` imzası; testlerde sahte oturum verilebilsin diye."""
+
     def get(self, url: str, **kwargs: Any) -> requests.Response: ...
 
 
@@ -85,6 +95,8 @@ def clean_text(value: Any, limit: int) -> str:
     """Güvenilmeyen HTML/metni düz metne çevirir ve kırpar."""
     if not isinstance(value, str):
         return ""
+    # Wikipedia özetlerinde <b>, &amp; gibi HTML parçaları gelebilir; etiketler atılır,
+    # HTML karakter kodları normal karaktere çevrilir, fazla boşluklar tek boşluğa iner.
     text = SPACE_RE.sub(" ", html.unescape(TAG_RE.sub(" ", value))).strip()
     if len(text) > limit:
         text = text[: limit - 1].rsplit(" ", 1)[0] + "…"
@@ -92,6 +104,9 @@ def clean_text(value: Any, limit: int) -> str:
 
 
 def is_allowed_url(url: Any) -> bool:
+    """Bağlantı yalnızca https ve izin verilen alan adlarından (wikipedia.org,
+    duckduckgo.com ve alt alan adları) ise kabul edilir. Yanıttaki beklenmedik bir bağlantının
+    konsola yazılıp veritabanına kaydedilmesi böylece önlenir."""
     if not isinstance(url, str) or len(url) > 2048:
         return False
     try:
@@ -104,7 +119,11 @@ def is_allowed_url(url: Any) -> bool:
 
 
 def parse_wikipedia(payload: Any, limit: int = MAX_RESULTS) -> list[SearchResult]:
-    """MediaWiki ``generator=search`` + ``prop=extracts|info`` (formatversion=2) yanıtı."""
+    """Wikipedia API yanıtını sonuç listesine çevirir.
+
+    İstek, arama ile sayfa özetini tek çağrıda alır: generator=search sorguya uyan sayfaları
+    bulur, prop=extracts her sayfanın ilk cümlelerini, prop=info sayfa adresini ekler.
+    """
     if not isinstance(payload, dict):
         raise SearchError("Wikipedia yanıtı nesne değil")
     if "error" in payload:
@@ -117,6 +136,7 @@ def parse_wikipedia(payload: Any, limit: int = MAX_RESULTS) -> list[SearchResult
     if not isinstance(pages, list):
         raise SearchError("Wikipedia yanıtında 'pages' beklenen biçimde değil")
     results = []
+    # "index" arama sıralamasıdır (1 en alakalı). API sayfaları bu sırayla döndürmeyebilir.
     for page in sorted((p for p in pages if isinstance(p, dict)),
                        key=lambda p: p.get("index", 1_000)):
         title = clean_text(page.get("title"), MAX_TITLE_CHARS)
@@ -132,7 +152,11 @@ def parse_wikipedia(payload: Any, limit: int = MAX_RESULTS) -> list[SearchResult
 
 
 def parse_duckduckgo(payload: Any, limit: int = MAX_RESULTS) -> list[SearchResult]:
-    """DuckDuckGo Instant Answer API yanıtı (özet + ilgili konular)."""
+    """DuckDuckGo Instant Answer API yanıtını sonuç listesine çevirir.
+
+    Bu API tam bir arama sonucu listesi değil; konunun özeti (Abstract) ve ilgili konular
+    (RelatedTopics) döner. Wikipedia sonuç vermezse yedek olarak kullanılır.
+    """
     if not isinstance(payload, dict):
         raise SearchError("DuckDuckGo yanıtı nesne değil")
     results: list[SearchResult] = []
@@ -143,6 +167,7 @@ def parse_duckduckgo(payload: Any, limit: int = MAX_RESULTS) -> list[SearchResul
             summary=clean_text(payload.get("AbstractText"), MAX_SUMMARY_CHARS),
             url=str(abstract_url), source="duckduckgo"))
 
+    # İlgili konular iç içe gruplar halinde gelebilir; hepsi düz listeye açılır.
     def walk(topics: Any):
         for item in topics if isinstance(topics, list) else []:
             if isinstance(item, dict) and "Topics" in item:
@@ -162,7 +187,10 @@ def parse_duckduckgo(payload: Any, limit: int = MAX_RESULTS) -> list[SearchResul
 
 
 class WebSearchClient:
-    """Wikipedia -> DuckDuckGo sırasıyla arar; ağ hatalarını SearchOutcome'a çevirir."""
+    """Wikipedia -> DuckDuckGo sırasıyla arar; ağ hatalarını SearchOutcome'a çevirir.
+
+    İki servis de API anahtarı istemez; bu yüzden projede gizli bilgi (.env) yoktur.
+    """
 
     def __init__(self, session: HttpSession | None = None, timeout: float = WEB_TIMEOUT,
                  retries: int = WEB_RETRIES, backoff: float = WEB_BACKOFF_SECONDS,
@@ -180,6 +208,7 @@ class WebSearchClient:
         self.max_results = max_results
 
     def _get_json(self, url: str, params: dict[str, Any]) -> Any:
+        """GET isteği atar, geçici hatalarda bekleyip tekrar dener, JSON döndürür."""
         last: Exception | None = None
         for attempt in range(self.retries + 1):
             try:
@@ -192,6 +221,7 @@ class WebSearchClient:
             else:
                 if resp.status_code in RETRY_STATUS:
                     last = SearchError(f"HTTP {resp.status_code}")
+                    # Sunucu "Retry-After" başlığıyla ne kadar bekleneceğini söyleyebilir.
                     retry_after = resp.headers.get("Retry-After", "")
                     wait = float(retry_after) if retry_after.isdigit() else None
                     logger.info("HTTP %s (deneme %d)", resp.status_code, attempt + 1)
@@ -201,18 +231,21 @@ class WebSearchClient:
                     continue
                 if resp.status_code != 200:
                     raise SearchError(f"HTTP {resp.status_code}")
-                resp.encoding = "utf-8"
+                resp.encoding = "utf-8"  # Türkçe karakterlerin doğru çözülmesi için
                 try:
                     return json.loads(resp.text)
                 except (json.JSONDecodeError, ValueError) as exc:
                     raise SearchError(f"Bozuk JSON: {exc}") from exc
             if attempt < self.retries:
+                # Üstel bekleme: 0,8 sn, 1,6 sn ... sunucuya yük bindirmeden tekrar denenir.
                 self.sleep(self.backoff * 2 ** attempt)
+        # Tüm denemeler bağlantı hatasıyla bittiyse bu "internet yok" durumudur.
         if isinstance(last, requests.ConnectionError | requests.Timeout):
             raise OfflineError(str(last))
         raise SearchError(str(last))
 
     def search_wikipedia(self, query: str) -> list[SearchResult]:
+        # Türkçe Wikipedia; ilk 3 sayfanın giriş bölümünden 2 cümle düz metin olarak istenir.
         payload = self._get_json(WIKIPEDIA_API_URL, {
             "action": "query", "format": "json", "formatversion": "2", "utf8": "1",
             "generator": "search", "gsrsearch": query, "gsrlimit": str(self.max_results),
@@ -228,6 +261,7 @@ class WebSearchClient:
         return parse_duckduckgo(payload, self.max_results)
 
     def search(self, query: str) -> SearchOutcome:
+        """Önce Wikipedia, sonuç yoksa DuckDuckGo denenir; ilk sonuç veren kullanılır."""
         start = time.perf_counter()
         query = (query or "").strip()
         if not query:
@@ -250,6 +284,7 @@ class WebSearchClient:
                                      source=name,
                                      elapsed_ms=round((time.perf_counter() - start) * 1000, 1))
             errors.append(f"{name}: sonuç yok")
+        # İki servis de bağlantı hatası verdiyse "çevrimdışı"; uygulama bir süre aramayı dener.
         status = (STATUS_OFFLINE if offline == len(providers)
                   else STATUS_EMPTY if all("sonuç yok" in e for e in errors) else STATUS_ERROR)
         return SearchOutcome(query=query, status=status, error="; ".join(errors),
