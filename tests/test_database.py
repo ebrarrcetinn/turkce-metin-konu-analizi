@@ -11,7 +11,7 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from src.database.db import SCHEMA_VERSION, Database, DatabaseError
+from src.database.db import MIGRATIONS, SCHEMA_VERSION, Database, DatabaseError
 
 META = {"model_version": "1.0.0", "model_name": "m", "training_timestamp": "t",
         "dataset": {"version": "d"}, "weights_sha256": "abc", "metrics": {"f1": 0.9},
@@ -46,6 +46,19 @@ def test_migration_is_idempotent(tmp_path):
     Database(path).close()
     with Database(path) as again:
         assert again.schema_version() == SCHEMA_VERSION
+
+
+def test_old_database_is_upgraded(tmp_path):
+    """v1 şemasıyla oluşturulmuş eski bir dosya açılınca eksik adımlar uygulanır."""
+    path = tmp_path / "eski.db"
+    conn = sqlite3.connect(path)
+    conn.executescript(MIGRATIONS[0] + "\nPRAGMA user_version = 1;")
+    conn.close()
+    with Database(path) as upgraded:
+        assert upgraded.schema_version() == SCHEMA_VERSION
+        columns = {r[1] for r in upgraded._conn.execute("PRAGMA table_info(model_metadata)")}
+        assert "weights_sha256" in columns and "artifact_sha256" not in columns
+        upgraded.register_model(META)
 
 
 def test_newer_schema_is_rejected(tmp_path):

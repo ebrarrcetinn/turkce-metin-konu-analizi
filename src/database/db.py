@@ -23,8 +23,20 @@ from src.config import CACHE_TTL_HOURS, DB_PATH
 
 logger = logging.getLogger(__name__)
 
+# Veritabanı başka bir işlem tarafından kilitliyse hata vermeden önce beklenecek süre.
 BUSY_TIMEOUT_MS = 5000
 
+# Şema değişiklikleri sırayla uygulanan adımlar (migration) olarak tutulur. Veritabanının
+# hangi adımda olduğu SQLite'ın PRAGMA user_version değerinde saklanır; uygulama açılırken
+# eksik adımlar uygulanır. Böylece eski bir nlp_app.db dosyası silinmeden güncellenir.
+#
+# Tablolar:
+#   model_metadata  : kayıtları üreten modelin sürümü, eğitim zamanı ve metrikleri
+#   sessions        : her sohbet oturumu (sıfırla komutu yeni oturum açar)
+#   metinler        : kullanıcının her mesajı, genel konu, güven, alt konular, tüm olasılıklar
+#   sohbet_konulari : her mesajdan sonraki sohbet konusu ve üretilen arama sorgusu
+#   arama_sonuclari : internetten gelen sonuçlar (başlık, özet, bağlantı)
+#   search_cache    : aynı sorgu 24 saat içinde tekrar sorulursa ağa çıkmadan cevap vermek için
 MIGRATIONS: tuple[str, ...] = (
     # v1 — temel şema
     """
@@ -94,6 +106,10 @@ MIGRATIONS: tuple[str, ...] = (
     CREATE INDEX idx_arama_query ON arama_sonuclari(search_query);
     CREATE INDEX idx_cache_created ON search_cache(created_at);
     """,
+    # v2 — sütun, içeriğine uygun adla yeniden adlandırıldı (model ağırlıklarının özeti)
+    """
+    ALTER TABLE model_metadata RENAME COLUMN artifact_sha256 TO weights_sha256;
+    """,
 )
 SCHEMA_VERSION = len(MIGRATIONS)
 
@@ -103,14 +119,22 @@ class DatabaseError(RuntimeError):
 
 
 def utcnow() -> str:
+    """Zaman damgaları saat dilimi karışıklığı olmasın diye UTC ve ISO biçiminde tutulur."""
     return datetime.now(UTC).isoformat(timespec="seconds")
 
 
 def _dumps(value: Any) -> str:
+    """Liste/sözlük alanları JSON metni olarak saklanır (SQLite'ta liste tipi yoktur)."""
     return json.dumps(value, ensure_ascii=False, sort_keys=True)
 
 
 class Database:
+    """SQLite bağlantısı ve tüm okuma/yazma işlemleri.
+
+    Tüm sorgular parametreli (?) yazılır; kullanıcı metni SQL'e hiçbir zaman doğrudan
+    eklenmez, bu da SQL enjeksiyonunu önler.
+    """
+
     def __init__(self, path: Path | str = DB_PATH):
         self.path = Path(path) if str(path) != ":memory:" else path
         try:
@@ -121,6 +145,7 @@ class Database:
             raise DatabaseError(f"Veritabanı açılamadı ({path}): {exc}") from exc
         self._conn.row_factory = sqlite3.Row
         try:
+            # SQLite'ta yabancı anahtar denetimi varsayılan olarak kapalıdır; açılır.
             self._conn.execute("PRAGMA foreign_keys = ON")
             self._conn.execute(f"PRAGMA busy_timeout = {BUSY_TIMEOUT_MS}")
             self.migrate()
@@ -141,6 +166,8 @@ class Database:
 
     @contextmanager
     def _write(self) -> Iterator[sqlite3.Connection]:
+        """Yazma işlemlerini transaction içinde yapar: hata olursa yarım kayıt kalmaz
+        (hepsi geri alınır), başarılıysa tek seferde kaydedilir."""
         try:
             with self._conn:
                 yield self._conn
@@ -159,12 +186,15 @@ class Database:
         return int(self._conn.execute("PRAGMA user_version").fetchone()[0])
 
     def migrate(self) -> None:
+        """Eksik şema adımlarını sırayla uygular."""
         current = self.schema_version()
         if current > SCHEMA_VERSION:
             raise DatabaseError(
                 f"Veritabanı şeması ({current}) bu uygulamadan ({SCHEMA_VERSION}) daha yeni.")
         for version in range(current, SCHEMA_VERSION):
             try:
+                # Her adım ve sürüm numarası tek transaction'da yazılır: yarıda kalırsa
+                # veritabanı eski sürümde kalır.
                 self._conn.executescript("BEGIN;\n" + MIGRATIONS[version] +
                                          f"\nPRAGMA user_version = {version + 1};\nCOMMIT;")
             except sqlite3.Error as exc:
@@ -173,11 +203,12 @@ class Database:
             logger.info("Veritabanı şeması v%d'ye yükseltildi", version + 1)
 
     def register_model(self, metadata: dict) -> None:
+        """Modeli bir kez kaydeder; aynı sürüm zaten varsa dokunmaz (INSERT OR IGNORE)."""
         with self._write() as conn:
             conn.execute(
                 """INSERT OR IGNORE INTO model_metadata
                    (model_version, model_name, training_timestamp, dataset_version,
-                    artifact_sha256, metrics_json, thresholds_json, registered_at)
+                    weights_sha256, metrics_json, thresholds_json, registered_at)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
                 (metadata["model_version"], metadata["model_name"],
                  metadata["training_timestamp"], metadata["dataset"]["version"],
@@ -196,6 +227,7 @@ class Database:
 
     def save_text(self, session_id: str, message_index: int, prediction: dict,
                   model_version: str | None) -> int:
+        """Mesajı ve sınıflandırma sonucunu kaydeder; sohbet konusu kaydı için satır id döner."""
         with self._write() as conn:
             cur = conn.execute(
                 """INSERT INTO metinler (session_id, message_index, text, status, general_topic,
@@ -212,6 +244,7 @@ class Database:
 
     def save_theme(self, session_id: str, metin_id: int, theme: dict,
                    query: str | None) -> int:
+        """Mesajdan sonraki sohbet konusunu ve arama sorgusunu kaydeder."""
         with self._write() as conn:
             cur = conn.execute(
                 """INSERT INTO sohbet_konulari (session_id, metin_id, theme_label, theme_phrase,
@@ -224,6 +257,7 @@ class Database:
 
     def save_search_results(self, session_id: str, theme_id: int, query: str,
                             results: list[dict], from_cache: bool) -> int:
+        """Arama sonuçlarını sırasıyla (rank 1 en alakalı) kaydeder."""
         rows = [(session_id, theme_id, query, rank, r["title"], r["summary"], r["url"],
                  r["source"], int(from_cache), utcnow())
                 for rank, r in enumerate(results, start=1)]
@@ -235,6 +269,7 @@ class Database:
         return len(rows)
 
     def cache_get(self, query_key: str, ttl_hours: float = CACHE_TTL_HOURS) -> dict | None:
+        """Sorgu önbellekte ve süresi dolmamışsa kayıtlı sonuçları döndürür."""
         rows = self._read(
             "SELECT source, results_json, created_at FROM search_cache WHERE query_key = ?",
             (query_key,))
@@ -247,6 +282,7 @@ class Database:
         return {"source": row["source"], "results": json.loads(row["results_json"])}
 
     def cache_put(self, query_key: str, source: str, results: list[dict]) -> None:
+        """Sonucu önbelleğe yazar; sorgu zaten varsa günceller (upsert)."""
         with self._write() as conn:
             conn.execute(
                 """INSERT INTO search_cache (query_key, source, results_json, created_at)
@@ -256,6 +292,7 @@ class Database:
                 (query_key, source, _dumps(results), utcnow()))
 
     def session_history(self, session_id: str) -> list[dict]:
+        """Bir oturumdaki mesajlar ve her birinden sonraki sohbet konusu."""
         rows = self._read(
             """SELECT m.message_index, m.text, m.status, m.general_topic, m.confidence,
                       m.subtopics_json, k.theme_label, k.search_query
@@ -264,6 +301,8 @@ class Database:
         return [{**dict(r), "subtopics": json.loads(r["subtopics_json"])} for r in rows]
 
     def count(self, table: str) -> int:
+        # Tablo adı parametre olarak verilemediği için f-string kullanılır; bu yüzden yalnızca
+        # bilinen tablo adları kabul edilir.
         if table not in {"metinler", "sohbet_konulari", "arama_sonuclari", "sessions",
                          "search_cache", "model_metadata"}:
             raise ValueError(f"Bilinmeyen tablo: {table}")
