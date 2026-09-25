@@ -171,7 +171,8 @@ def _run_cli(args, stdin_text, tmp_path):
              "NLP_WEB_SEARCH": "0"})
 
 
-def test_cli_session_commands(tmp_path):
+def test_cli_session_commands(classifier, tmp_path):
+    # classifier fixture'ı: model yoksa test atlanır (yoksa proje.py eğitime başlardı).
     script = ("Kuantum bilgisayarlar kübit kullanır.\n\n!!!\ngeçmiş\nsıfırla\ngeçmiş\n"
               "yardım\nq\n")
     proc = _run_cli(["--no-web"], script, tmp_path)
@@ -187,7 +188,7 @@ def test_cli_session_commands(tmp_path):
         assert database.count("metinler") == 1 and database.count("sessions") == 2
 
 
-def test_cli_handles_eof(tmp_path):
+def test_cli_handles_eof(classifier, tmp_path):
     proc = _run_cli(["--no-web"], "Futbol maçı\n", tmp_path)
     assert proc.returncode == 0 and "Girdi sonu" in proc.stdout
 
