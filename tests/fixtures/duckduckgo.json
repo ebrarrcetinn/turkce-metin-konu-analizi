@@ -1,0 +1,15 @@
+{
+  "Abstract": "",
+  "AbstractSource": "Wikipedia",
+  "AbstractText": "Kuantum bilgisayar, kuantum mekaniksel olayları kullanan bir bilgisayardır.",
+  "AbstractURL": "https://tr.wikipedia.org/wiki/Kuantum_bilgisayar",
+  "Heading": "Kuantum bilgisayar",
+  "RelatedTopics": [
+    {"FirstURL": "https://duckduckgo.com/Qubit", "Text": "Kübit - Kuantum bilginin temel birimi."},
+    {"Name": "Alt başlıklar", "Topics": [
+      {"FirstURL": "https://duckduckgo.com/Quantum_supremacy", "Text": "Kuantum üstünlüğü - Klasik bilgisayarların pratikte çözemediği problemi çözme."},
+      {"FirstURL": "http://duckduckgo.com/insecure", "Text": "Güvensiz bağlantı - reddedilmeli."}
+    ]}
+  ],
+  "Type": "A"
+}

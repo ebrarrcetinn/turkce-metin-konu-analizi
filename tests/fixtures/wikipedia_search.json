@@ -1,0 +1,42 @@
+{
+  "batchcomplete": true,
+  "query": {
+    "pages": [
+      {
+        "pageid": 2002,
+        "ns": 0,
+        "title": "Kübit",
+        "index": 2,
+        "extract": "Kuantum bilişimde kübit, kuantum bilginin temel birimidir. <b>Klasik</b> bitin kuantum karşılığıdır.",
+        "contentmodel": "wikitext",
+        "pagelanguage": "tr",
+        "fullurl": "https://tr.wikipedia.org/wiki/K%C3%BCbit",
+        "canonicalurl": "https://tr.wikipedia.org/wiki/K%C3%BCbit"
+      },
+      {
+        "pageid": 1001,
+        "ns": 0,
+        "title": "Kuantum bilgisayar",
+        "index": 1,
+        "extract": "Kuantum bilgisayar, süperpozisyon ve dolanıklık gibi kuantum mekaniği olaylarını kullanarak veri işleyen bir hesaplama aygıtıdır.",
+        "fullurl": "https://tr.wikipedia.org/wiki/Kuantum_bilgisayar"
+      },
+      {
+        "pageid": 3003,
+        "ns": 0,
+        "title": "Kötü amaçlı sayfa",
+        "index": 3,
+        "extract": "Bu sonuç izinli olmayan bir alan adına işaret eder.",
+        "fullurl": "https://tr.wikipedia.org.evil.example/wiki/X"
+      },
+      {
+        "pageid": 4004,
+        "ns": 0,
+        "title": "Shor algoritması &amp; kübitler",
+        "index": 4,
+        "extract": "Shor algoritması, tam sayıları polinom zamanda çarpanlarına ayıran bir kuantum algoritmasıdır.",
+        "fullurl": "https://tr.wikipedia.org/wiki/Shor_algoritmas%C4%B1"
+      }
+    ]
+  }
+}
