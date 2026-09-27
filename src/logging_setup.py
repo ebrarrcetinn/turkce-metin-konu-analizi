@@ -3,7 +3,7 @@ Dosya   : src/logging_setup.py
 Konu    : Loglama Ayarları
 Açıklama: Bu dosyada amacım uygulama genelinde log biçimini ve seviyesini ayarlamak;
           istenirse logları logs/app.log dosyasına da yazıyorum.
-Yazar   : Ebrar Cemre Çetin
+İsim    : Ebrar Cemre Çetin
 Tarih   : 23.09.2026
 """
 

@@ -5,7 +5,7 @@ Açıklama: Bu dosyada amacım ham Tabu kartlarını okumak, taksonomiye eşleme
           çelişkileri temizlemek; eğitim, doğrulama, test, görülmemiş konu (OOD) ve harici
           değerlendirme setlerini oluşturup sızıntı kontrolüyle birlikte data/processed
           klasörüne yazmak.
-Yazar   : Ebrar Cemre Çetin
+İsim    : Ebrar Cemre Çetin
 Tarih   : 24.09.2026
 """
 

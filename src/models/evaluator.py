@@ -4,7 +4,7 @@ Konu    : Model Değerlendirme
 Açıklama: Bu dosyada amacım modeli test, görülmemiş konu (OOD) ve harici setlerde ölçmek;
           ödevdeki sohbet senaryolarını çalıştırmak ve sonuçları
           reports/degerlendirme_raporu.json dosyasına yazmak.
-Yazar   : Ebrar Cemre Çetin
+İsim    : Ebrar Cemre Çetin
 Tarih   : 25.09.2026
 """
 

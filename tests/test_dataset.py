@@ -3,7 +3,7 @@ Dosya   : tests/test_dataset.py
 Konu    : Veri Seti Hazırlama Testleri
 Açıklama: Veri temizleme, taksonomi örnekleri, hatalı veri kontrolleri ve yakın kopya
           ölçümünü küçük sahte dosyalarla test eder.
-Yazar   : Ebrar Cemre Çetin
+İsim    : Ebrar Cemre Çetin
 Tarih   : 27.09.2026
 """
 

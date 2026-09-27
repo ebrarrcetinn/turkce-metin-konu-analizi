@@ -3,7 +3,7 @@ Dosya   : src/ml/naive_bayes.py
 Konu    : Çok Terimli Naive Bayes Sınıflandırıcı
 Açıklama: Bu dosyada amacım karşılaştırma (temel model) için Laplace düzeltmeli çok
           terimli Naive Bayes algoritmasını uygulamak.
-Yazar   : Ebrar Cemre Çetin
+İsim    : Ebrar Cemre Çetin
 Tarih   : 24.09.2026
 """
 

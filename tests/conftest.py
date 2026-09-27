@@ -3,7 +3,7 @@ Dosya   : tests/conftest.py
 Konu    : Ortak Test Yardımcıları
 Açıklama: Testlerde kullanılan model ve veritabanı fixture'larını, sahte HTTP yanıtlarını
           ve örnek dosya okuyucuyu içerir.
-Yazar   : Ebrar Cemre Çetin
+İsim    : Ebrar Cemre Çetin
 Tarih   : 27.09.2026
 """
 

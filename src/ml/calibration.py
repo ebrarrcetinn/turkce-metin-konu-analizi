@@ -3,7 +3,7 @@ Dosya   : src/ml/calibration.py
 Konu    : Güven Skoru Kalibrasyonu
 Açıklama: Bu dosyada amacım temperature scaling yöntemiyle model olasılıklarını gerçek
           doğruluğa yaklaştırmak; en iyi sıcaklığı altın oran aramasıyla buluyorum.
-Yazar   : Ebrar Cemre Çetin
+İsim    : Ebrar Cemre Çetin
 Tarih   : 24.09.2026
 """
 

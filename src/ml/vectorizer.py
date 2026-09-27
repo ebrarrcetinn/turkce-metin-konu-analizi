@@ -4,7 +4,7 @@ Konu    : TF-IDF Vektörleştirici
 Açıklama: Bu dosyada amacım metinleri sözcük ve karakter n-gram'larından oluşan TF-IDF
           ağırlıklı, L2 normlu seyrek vektörlere dönüştürmek. Hazır kütüphane kullanmadan
           kendim yazdım.
-Yazar   : Ebrar Cemre Çetin
+İsim    : Ebrar Cemre Çetin
 Tarih   : 24.09.2026
 """
 

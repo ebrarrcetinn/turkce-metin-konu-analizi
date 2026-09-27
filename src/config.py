@@ -4,7 +4,7 @@ Konu    : Proje Ayarları
 Açıklama: Bu dosyada amacım yollar, veri bölme oranları, model hiperparametreleri, eşikler,
           sohbet takibi ve web arama ayarları gibi tüm sabitleri tek yerde toplamak. Bazı
           değerleri ortam değişkenleriyle değiştirilebilir yaptım.
-Yazar   : Ebrar Cemre Çetin
+İsim    : Ebrar Cemre Çetin
 Tarih   : 23.09.2026
 """
 

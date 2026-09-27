@@ -3,7 +3,7 @@ Dosya   : tests/test_ml.py
 Konu    : Makine Öğrenmesi Algoritma Testleri
 Açıklama: TF-IDF, Naive Bayes, softmax regresyon, kalibrasyon, metrikler ve veri bölme
           fonksiyonlarını küçük örneklerle test eder.
-Yazar   : Ebrar Cemre Çetin
+İsim    : Ebrar Cemre Çetin
 Tarih   : 27.09.2026
 """
 

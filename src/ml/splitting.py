@@ -3,7 +3,7 @@ Dosya   : src/ml/splitting.py
 Konu    : Gruplu ve Tabakalı Veri Bölme
 Açıklama: Bu dosyada amacım veriyi, aynı terime ait örnekler farklı bölmelere düşmeyecek ve
           konu dağılımı korunacak şekilde eğitim/doğrulama/test olarak bölmek.
-Yazar   : Ebrar Cemre Çetin
+İsim    : Ebrar Cemre Çetin
 Tarih   : 24.09.2026
 """
 

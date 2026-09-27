@@ -1,6 +1,6 @@
 # Türkçe Metin Konu Analizi — Proje Raporu
 
-Hazırlayan: Ebrar Cemre Çetin
+İsim: Ebrar Cemre Çetin
 Tarih: 27.09.2026
 
 ## 1. Amaç

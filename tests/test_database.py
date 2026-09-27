@@ -2,7 +2,7 @@
 Dosya   : tests/test_database.py
 Konu    : Veritabanı Testleri
 Açıklama: Tablo oluşturma, kayıt, şema geçişi ve önbellek işlemlerini test eder.
-Yazar   : Ebrar Cemre Çetin
+İsim    : Ebrar Cemre Çetin
 Tarih   : 27.09.2026
 """
 

@@ -3,7 +3,7 @@ Dosya   : src/ml/metrics.py
 Konu    : Değerlendirme Metrikleri
 Açıklama: Bu dosyada amacım doğruluk, sınıf bazında precision/recall/F1, macro/weighted F1,
           karmaşıklık matrisi ve beklenen kalibrasyon hatasını (ECE) hesaplamak.
-Yazar   : Ebrar Cemre Çetin
+İsim    : Ebrar Cemre Çetin
 Tarih   : 24.09.2026
 """
 

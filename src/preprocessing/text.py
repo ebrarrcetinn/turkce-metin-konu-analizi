@@ -4,7 +4,7 @@ Konu    : Türkçe Metin Ön İşleme
 Açıklama: Bu dosyada amacım Türkçeye uygun küçük harfe çevirme (I/İ sorunu), normalizasyon,
           tokenizasyon, stopword listesi ve F5 kökleme (sözcüğün ilk 5 harfi) işlemlerini
           yapmak. Aynı fonksiyonları eğitimde ve tahminde ortak kullanıyorum.
-Yazar   : Ebrar Cemre Çetin
+İsim    : Ebrar Cemre Çetin
 Tarih   : 23.09.2026
 """
 

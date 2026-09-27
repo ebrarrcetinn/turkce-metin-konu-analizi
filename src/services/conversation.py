@@ -5,7 +5,7 @@ Açıklama: Bu dosyada amacım her mesajın konu olasılıklarını azalan ağı
           (eski * decay + yeni) biriktirerek sohbetin genel konusunu bulmak ve
           "bilimsel kitaplar", "biyoloji hakkında bilimsel kitaplar" gibi doğal bir tema
           ifadesi üretmek.
-Yazar   : Ebrar Cemre Çetin
+İsim    : Ebrar Cemre Çetin
 Tarih   : 26.09.2026
 """
 

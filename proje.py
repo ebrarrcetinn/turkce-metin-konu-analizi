@@ -5,7 +5,7 @@ Açıklama: Bu dosyada amacım kullanıcıdan döngü içinde metin alıp metnin
           alt konularını, sohbetin genel konusunu, ürettiğim arama sorgusunu ve internet
           sonuçlarını konsola yazmak, hepsini de SQLite veritabanına kaydetmek. Model dosyası
           yoksa program veriyi indirip modeli kendisi eğitiyor.
-Yazar   : Ebrar Cemre Çetin
+İsim    : Ebrar Cemre Çetin
 Tarih   : 27.09.2026
 
 Kullanım: python proje.py [--egit] [--degerlendir] [--no-web] [--debug] [--db YOL]

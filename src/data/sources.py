@@ -4,7 +4,7 @@ Konu    : Veri Kaynaklarının İndirilmesi
 Açıklama: Bu dosyada amacım eğitim ve değerlendirme verilerini sabit commit adreslerinden
           indirmek, her dosyayı SHA-256 ile doğrulamak ve kaynak/lisans bilgisini
           provenance.json dosyasına yazmak.
-Yazar   : Ebrar Cemre Çetin
+İsim    : Ebrar Cemre Çetin
 Tarih   : 23.09.2026
 """
 

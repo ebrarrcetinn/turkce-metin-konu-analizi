@@ -4,7 +4,7 @@ Konu    : Uygulama Servisi
 Açıklama: Bu dosyada amacım bir mesaj için sınıflandırma, sohbet takibi, sorgu üretimi,
           internet araması ve veritabanı kaydı adımlarını sırayla çalıştırmak. Web veya
           veritabanı hatalarının sınıflandırmayı durdurmasına izin vermiyorum.
-Yazar   : Ebrar Cemre Çetin
+İsim    : Ebrar Cemre Çetin
 Tarih   : 27.09.2026
 """
 

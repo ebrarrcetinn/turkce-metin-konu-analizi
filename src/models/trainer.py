@@ -4,7 +4,7 @@ Konu    : Model Eğitimi
 Açıklama: Bu dosyada amacım Naive Bayes ile softmax regresyonu doğrulama setinde
           karşılaştırmak, iyi olanı seçmek, sıcaklık ve güven eşiğini belirlemek ve modeli
           eğitim + doğrulama verisiyle yeniden eğitip kaydetmek.
-Yazar   : Ebrar Cemre Çetin
+İsim    : Ebrar Cemre Çetin
 Tarih   : 25.09.2026
 """
 

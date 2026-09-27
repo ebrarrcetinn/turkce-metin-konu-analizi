@@ -2,7 +2,7 @@
 Dosya   : tests/test_preprocessing.py
 Konu    : Metin Ön İşleme Testleri
 Açıklama: Türkçe küçük harf, normalizasyon, tokenizasyon ve kökleme fonksiyonlarını test eder.
-Yazar   : Ebrar Cemre Çetin
+İsim    : Ebrar Cemre Çetin
 Tarih   : 27.09.2026
 """
 

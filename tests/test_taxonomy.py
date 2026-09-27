@@ -2,7 +2,7 @@
 Dosya   : tests/test_taxonomy.py
 Konu    : Taksonomi Testleri
 Açıklama: Kategori eşlemesini ve genel konu - alt konu hiyerarşisinin tutarlılığını test eder.
-Yazar   : Ebrar Cemre Çetin
+İsim    : Ebrar Cemre Çetin
 Tarih   : 27.09.2026
 """
 

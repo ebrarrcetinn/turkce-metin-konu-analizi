@@ -2,7 +2,7 @@
 Dosya   : tests/test_conversation_and_query.py
 Konu    : Sohbet Takibi ve Sorgu Testleri
 Açıklama: Sohbet konusu hesaplamasını, tema ifadelerini ve arama sorgusu üretimini test eder.
-Yazar   : Ebrar Cemre Çetin
+İsim    : Ebrar Cemre Çetin
 Tarih   : 27.09.2026
 """
 

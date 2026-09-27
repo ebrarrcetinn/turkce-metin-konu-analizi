@@ -3,7 +3,7 @@ Dosya   : tests/test_model_behavior.py
 Konu    : Eğitilmiş Model Davranış Testleri
 Açıklama: Kuantum ayrımı, case'deki örnek cümleler, tek sözcüklük konu adları ve uç durumlar
           üzerinde eğitilmiş modelin davranışını test eder. Cümleler eğitim verisinde yoktur.
-Yazar   : Ebrar Cemre Çetin
+İsim    : Ebrar Cemre Çetin
 Tarih   : 27.09.2026
 """
 

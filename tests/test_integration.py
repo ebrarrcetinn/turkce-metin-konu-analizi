@@ -3,7 +3,7 @@ Dosya   : tests/test_integration.py
 Konu    : Uçtan Uca Testler
 Açıklama: Sınıflandırmadan veritabanına ve arama katmanına kadar tüm akışı ve konsol
           uygulamasını test eder.
-Yazar   : Ebrar Cemre Çetin
+İsim    : Ebrar Cemre Çetin
 Tarih   : 27.09.2026
 """
 

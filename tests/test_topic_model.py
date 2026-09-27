@@ -3,7 +3,7 @@ Dosya   : tests/test_topic_model.py
 Konu    : Konu Modeli Testleri
 Açıklama: Olasılık toplama, karar verme, alt konu seçimi ve model dosyasının kaydedilip
           yüklenmesini test eder (eğitilmiş model gerektirmez).
-Yazar   : Ebrar Cemre Çetin
+İsim    : Ebrar Cemre Çetin
 Tarih   : 27.09.2026
 """
 

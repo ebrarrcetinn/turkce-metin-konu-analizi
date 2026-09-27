@@ -2,7 +2,7 @@
 Dosya   : tests/test_config.py
 Konu    : Ayar Testleri
 Açıklama: Geçersiz ortam değişkenlerinde varsayılan değerlere dönülmesini test eder.
-Yazar   : Ebrar Cemre Çetin
+İsim    : Ebrar Cemre Çetin
 Tarih   : 27.09.2026
 """
 

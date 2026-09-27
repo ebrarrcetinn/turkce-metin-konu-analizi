@@ -4,7 +4,7 @@ Konu    : Softmax Regresyon Sınıflandırıcı
 Açıklama: Bu dosyada amacım projenin ana modeli olan çok sınıflı lojistik (softmax)
           regresyonu mini-batch Adam, sınıf ağırlıkları, L2 düzenlileştirme ve erken durdurma
           ile eğitmek.
-Yazar   : Ebrar Cemre Çetin
+İsim    : Ebrar Cemre Çetin
 Tarih   : 24.09.2026
 """
 

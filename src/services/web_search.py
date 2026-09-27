@@ -3,7 +3,7 @@ Dosya   : src/services/web_search.py
 Konu    : İnternet Araması
 Açıklama: Bu dosyada amacım Türkçe Wikipedia (birincil) ve DuckDuckGo (yedek) üzerinden
           arama yapmak; ağ ve API hatalarını yakalayıp sonuç durumuna çeviriyorum.
-Yazar   : Ebrar Cemre Çetin
+İsim    : Ebrar Cemre Çetin
 Tarih   : 26.09.2026
 """
 

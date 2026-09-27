@@ -4,7 +4,7 @@ Konu    : Konu Taksonomisi
 Açıklama: Bu dosyada amacım genel konuları (Fizik, Kimya, Biyoloji, Teknoloji, Bilim,
           Kitaplar, Spor, Tarih) ve alt konularını tanımlamak; kaynak veri setindeki
           kategorileri bu taksonomiye eşliyorum.
-Yazar   : Ebrar Cemre Çetin
+İsim    : Ebrar Cemre Çetin
 Tarih   : 23.09.2026
 """
 

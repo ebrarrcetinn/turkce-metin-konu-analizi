@@ -4,7 +4,7 @@ Konu    : Konu Sınıflandırma Modeli
 Açıklama: Bu dosyada amacım eğitilmiş modeli temsil etmek: metinden genel konu ve alt konu
           olasılıklarını hesaplıyor, güven eşiğine göre karar veriyor, anahtar sözcük
           çıkarıyor ve modeli .npz/.json dosyalarına kaydedip yüklüyorum.
-Yazar   : Ebrar Cemre Çetin
+İsim    : Ebrar Cemre Çetin
 Tarih   : 25.09.2026
 """
 

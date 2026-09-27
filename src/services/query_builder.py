@@ -3,7 +3,7 @@ Dosya   : src/services/query_builder.py
 Konu    : Arama Sorgusu Oluşturma
 Açıklama: Bu dosyada amacım sohbet temasından ve mesajdaki ayırt edici sözcüklerden
           internet araması için kısa bir sorgu üretmek.
-Yazar   : Ebrar Cemre Çetin
+İsim    : Ebrar Cemre Çetin
 Tarih   : 26.09.2026
 """
 

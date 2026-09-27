@@ -4,7 +4,7 @@ Konu    : SQLite Veritabanı Katmanı
 Açıklama: Bu dosyada amacım metinleri, tahmin edilen konuları, sohbet konularını, arama
           sorgularını ve internet sonuçlarını SQLite veritabanına kaydetmek; şema sürümünü
           de burada yönetiyor ve arama sonuçlarını önbellekte tutuyorum.
-Yazar   : Ebrar Cemre Çetin
+İsim    : Ebrar Cemre Çetin
 Tarih   : 26.09.2026
 """
 

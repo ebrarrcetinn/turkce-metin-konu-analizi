@@ -9,7 +9,7 @@ Sınıflandırma için kullanılan TF-IDF vektörleştirici, Naive Bayes, softma
 kalibrasyon, veri bölme ve değerlendirme metrikleri hazır makine öğrenmesi kütüphaneleri
 kullanılmadan, yalnızca `numpy` / `scipy` (dizi ve seyrek matris yapıları) ile yazılmıştır.
 
-Yazar: Ebrar Cemre Çetin
+İsim: Ebrar Cemre Çetin
 
 ## Case gereksinimleri ve karşılıkları
 
