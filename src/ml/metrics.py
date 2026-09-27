@@ -15,7 +15,8 @@ import numpy as np
 
 
 class ClassificationReport:
-    """Amacım doğruluğu, sınıf bazında precision/recall/F1'ı ve karmaşıklık matrisini
+    """
+    Amacım doğruluğu, sınıf bazında precision/recall/F1'ı ve karmaşıklık matrisini
     hesaplamak.
 
     precision: modelin "X" dediklerinin ne kadarı gerçekten X
@@ -58,7 +59,8 @@ class ClassificationReport:
 
     @property
     def weighted_f1(self) -> float:
-        """F1'ı örnek sayısıyla ağırlıklandırıyorum; büyük sınıflar daha çok etki ediyor."""
+        """
+        F1'ı örnek sayısıyla ağırlıklandırıyorum; büyük sınıflar daha çok etki ediyor."""
         total = self.support.sum()
         return float((self.f1 * self.support).sum() / total) if total else 0.0
 
@@ -83,14 +85,16 @@ class ClassificationReport:
 
 
 def _safe_divide(numerator: np.ndarray, denominator: np.ndarray) -> np.ndarray:
-    """Payda 0 olan yerlerde (ör. hiç tahmin edilmemiş sınıf) sonucu 0 kabul ediyorum."""
+    """
+    Payda 0 olan yerlerde (ör. hiç tahmin edilmemiş sınıf) sonucu 0 kabul ediyorum."""
     result = np.zeros_like(numerator, dtype=float)
     np.divide(numerator, denominator, out=result, where=denominator > 0)
     return result
 
 
 def expected_calibration_error(confidences, correct, n_bins: int = 15) -> float:
-    """Amacım beklenen kalibrasyon hatasıyla (ECE) modelin güveninin gerçek doğruluğuyla ne
+    """
+    Amacım beklenen kalibrasyon hatasıyla (ECE) modelin güveninin gerçek doğruluğuyla ne
     kadar uyumlu olduğunu ölçmek.
 
     Tahminleri güven değerine göre 15 aralığa (0-0,067, 0,067-0,133, ...) ayırıyorum. Her

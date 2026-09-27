@@ -55,7 +55,8 @@ def pct(value: float) -> str:
 
 
 class ModelPreparer:
-    """Amacım model yoksa (veya istenirse) veriyi indirmek, veri setini kurmak ve modeli eğitmek.
+    """
+    Amacım model yoksa (veya istenirse) veriyi indirmek, veri setini kurmak ve modeli eğitmek.
 
     Böylece proje tek komutla (python proje.py) sıfırdan çalışıyor; model dosyasını repoda
     tutmadım (30 MB), ilk çalıştırmada kullanıcının bilgisayarında eğitiliyor.
@@ -96,7 +97,8 @@ class ModelPreparer:
 
 
 class ConsoleApp:
-    """Burada amacım konsol döngüsünü yönetmek: girdi okuyorum, servisi çağırıyorum, sonucu
+    """
+    Burada amacım konsol döngüsünü yönetmek: girdi okuyorum, servisi çağırıyorum, sonucu
     biçimlendirerek yazıyorum.
 
     Uygulama mantığını ChatService'e koydum; bu sınıf yalnızca giriş/çıkıştan sorumlu. Girdi

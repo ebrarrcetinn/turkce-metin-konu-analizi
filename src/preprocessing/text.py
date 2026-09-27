@@ -79,7 +79,8 @@ def strip_emoji(text: str) -> str:
 
 
 def normalize(text: str) -> str:
-    """Model girdisi için metni normalize ediyorum.
+    """
+    Model girdisi için metni normalize ediyorum.
 
     Eğitimde ve tahminde aynı fonksiyonu kullanıyorum; aksi halde model eğitimde gördüğünden
     farklı biçimde metin alır ve başarı düşer.
