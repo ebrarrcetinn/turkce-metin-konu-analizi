@@ -33,6 +33,7 @@ from src.models.topic_model import (
     TopicModel,
 )
 from src.models.trainer import Trainer
+from src.preprocessing.text import turkish_lower
 from src.services.app import ChatService, TurnResult
 from src.services.web_search import STATUS_EMPTY as SEARCH_EMPTY
 from src.services.web_search import STATUS_OFFLINE as SEARCH_OFFLINE
@@ -47,6 +48,15 @@ RESET_COMMANDS = {"sıfırla", "sifirla"}
 HELP_COMMANDS = {"yardım", "yardim", "help", "?"}
 HELP_TEXT = ("Komutlar: 'geçmiş' (bu oturumun mesajları), 'sıfırla' (yeni sohbet bağlamı; "
              "kayıtlar silinmez), 'yardım', 'çıkış' veya 'q'.")
+
+
+def is_command(text: str, commands: set[str]) -> bool:
+    """Komutu büyük-küçük harften bağımsız tanıyorum.
+
+    casefold() Türkçe I/İ kuralını bilmediği için "ÇIKIŞ" -> "çikiş" oluyor; turkish_lower()
+    ise "QUIT" -> "quıt" yapıyor. Bu yüzden iki biçime birden bakıyorum.
+    """
+    return bool({text.casefold(), turkish_lower(text)} & commands)
 
 
 def pct(value: float) -> str:
@@ -177,20 +187,22 @@ class ConsoleApp:
         self._print(f"Oturum: {self.service.session_id}")
         for item in self.service.history:
             p = item.prediction
-            label = p.general if p.status == STATUS_OK else \
+            # En olası konu gösterilen etiketten farklıysa (ör. "Belirsiz") onu da yazıyorum;
+            # "Diğer (en olası: Diğer)" gibi tekrar oluşmasın diye aynıysa yazmıyorum.
+            label = p.general if p.status == STATUS_OK or p.general == p.top_guess else \
                 f"{p.general} (en olası: {p.top_guess})"
             self._print(f"{item.index}. {item.text}\n   -> {label} {pct(p.confidence)} | "
                         f"sohbet: {item.theme_label}")
 
-    def handle_command(self, command: str) -> bool:
+    def handle_command(self, text: str) -> bool:
         """Girdi bir komutsa işleyip True döndürüyorum; değilse metin olarak analiz ediyorum."""
-        if command in HISTORY_COMMANDS:
+        if is_command(text, HISTORY_COMMANDS):
             self.render_history()
-        elif command in RESET_COMMANDS:
+        elif is_command(text, RESET_COMMANDS):
             session_id = self.service.reset()
             self._print(f"Yeni sohbet başlatıldı (oturum {session_id[:8]}…). "
                         "Önceki kayıtlar korunuyor.")
-        elif command in HELP_COMMANDS:
+        elif is_command(text, HELP_COMMANDS):
             self._print(HELP_TEXT)
         else:
             return False
@@ -209,11 +221,10 @@ class ConsoleApp:
                 self._print("\nGirdi sonu; çıkılıyor.")
                 break
             text = line.strip()
-            command = text.casefold()  # "Q", "ÇIKIŞ" gibi büyük harfli komutları da tanıyorum
-            if command in EXIT_COMMANDS:
+            if is_command(text, EXIT_COMMANDS):  # "Q", "ÇIKIŞ" gibi büyük harfle de çalışıyor
                 self._print("Güle güle!")
                 break
-            if self.handle_command(command):
+            if self.handle_command(text):
                 continue
             if not text:
                 self._print("Boş girdi; lütfen bir metin yazın.")
