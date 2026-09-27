@@ -51,6 +51,13 @@ def test_theme_focus_subtopic():
     assert theme.label == "Teknoloji > Kuantum Bilgisayarlar"
 
 
+def test_theme_focus_phrase_uses_turkish_lowercase():
+    # str.lower() "İ" harfini "i̇" (görünmez noktalı) yapardı ve arama sorgusu bozulurdu.
+    t = ConversationTracker()
+    t.update({"Tarih": 1.0}, {"Tarih": {"İlkçağ ve Iğdır Tarihi": 1.0}})
+    assert t.theme().phrase == "ilkçağ ve ığdır tarihi"
+
+
 def test_conversation_narrowing_books_science_biology():
     """Kitaplar -> Bilim -> Biyoloji sırasında tema giderek daralır."""
     t = ConversationTracker(decay=0.7)

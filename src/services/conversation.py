@@ -15,6 +15,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 
 from src.config import DECAY, OTHER_LABEL, TOPIC_MIN_SHARE, UNCERTAIN_LABEL
+from src.preprocessing.text import turkish_lower
 
 MAX_THEME_TOPICS = 3  # sohbet konusunu en fazla 3 genel konunun birleşimiyle sınırladım
 # Sohbet tek konudaysa ve bir alt konu o konunun en az yarısını oluşturuyorsa temayı alt
@@ -178,7 +179,8 @@ class ConversationTracker:
                 best_sub, best = max(subs.items(), key=lambda kv: kv[1])
                 if best / sub_total >= SUBTOPIC_FOCUS_SHARE:
                     focus = best_sub
-        phrase = focus.lower() if focus else compose_phrase([t for t, _ in chosen])
+        # str.lower() Türkçe İ/I harflerini yanlış küçültüyor; turkish_lower kullanıyorum.
+        phrase = turkish_lower(focus) if focus else compose_phrase([t for t, _ in chosen])
         return Theme(topics=chosen, phrase=phrase, focus_subtopic=focus)
 
     def snapshot(self) -> dict:
