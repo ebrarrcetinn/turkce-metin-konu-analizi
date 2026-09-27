@@ -166,7 +166,8 @@ def test_conversation_with_spec_sentences_keeps_books_and_biology(classifier, db
 def _run_cli(args, stdin_text, tmp_path):
     return subprocess.run(
         [sys.executable, "proje.py", "--db", str(tmp_path / "cli.db"), *args],
-        input=stdin_text, capture_output=True, text=True, cwd=PROJECT_ROOT, timeout=120,
+        input=stdin_text, capture_output=True, text=True, encoding="utf-8",
+        cwd=PROJECT_ROOT, timeout=120,
         env={**os.environ, "PYTHONIOENCODING": "utf-8", "NLP_LOG_LEVEL": "ERROR",
              "NLP_WEB_SEARCH": "0"})
 
