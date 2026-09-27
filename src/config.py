@@ -103,7 +103,7 @@ WIKIPEDIA_API_URL = "https://tr.wikipedia.org/w/api.php"
 DUCKDUCKGO_API_URL = "https://api.duckduckgo.com/"
 # Wikipedia, istek gönderen programın kendini tanıtmasını istiyor; bu metinle tanıtıyorum.
 USER_AGENT = (
-    "TurkceKonuAnalizi/1.0 (egitim projesi; https://github.com/ebrarrcetinn/book-genre-classifier)"
+    "TurkceKonuAnalizi/1.0 (egitim projesi; https://github.com/ebrarrcetinn/turkce-metin-konu-analizi)"
 )
 # Güvenlik için yalnızca bu sitelerden gelen bağlantıları gösterip kaydediyorum.
 ALLOWED_RESULT_HOSTS = ("wikipedia.org", "duckduckgo.com")
