@@ -454,7 +454,7 @@ Bu bölümde amacım sistemin henüz iyi çalışmadığı durumları açıkça 
 
 Bu bölümde amacım yazdığım kodun doğru çalıştığını nasıl kontrol ettiğimi göstermek.
 
-`python -m pytest` ile 165 test geçiyor; canlı internet testi atlanıyor, 1 testi bilinen sorun
+`python -m pytest` ile 185 test geçiyor; canlı internet testi atlanıyor, 1 testi bilinen sorun
 olarak işaretledim (12.1). Testlerim kendi yazdığım algoritmaları (TF-IDF formülü, Naive Bayes,
 softmax, sıcaklık, metrikler, gruplu bölme), veri hazırlamayı, modelin kaydedilip yüklenmesini,
 sohbet takibini, sorgu üretimini, web aramasının hata durumlarını, veritabanını ve konsol
